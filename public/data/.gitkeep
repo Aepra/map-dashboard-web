@@ -1,0 +1,2 @@
+# This folder stores downloaded Parquet files
+# Run: npm run download-data

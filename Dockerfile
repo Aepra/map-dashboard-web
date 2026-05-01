@@ -5,20 +5,20 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies with legacy peer deps
+# Install dependencies
 RUN npm install --legacy-peer-deps
 
-# Copy project files
+# Copy source code
 COPY . .
 
 # Create data directory
 RUN mkdir -p public/data
 
-# Expose port
-EXPOSE 5176
+# Expose Vite dev server port
+EXPOSE 5173
 
-# Default environment
+# Environment
 ENV NODE_ENV=development
 
-# Run startup script (downloads data + starts service + dev server)
-CMD ["npm", "run", "dev"]
+# Start Vite dev server with host 0.0.0.0 for Docker access
+CMD ["npm", "run", "dev:vite", "--", "--host", "0.0.0.0"]

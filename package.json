@@ -16,6 +16,7 @@
     "@deck.gl/core": "^9.3.2",
     "@deck.gl/layers": "^9.3.2",
     "@deck.gl/react": "^9.3.2",
+    "@deck.gl/widgets": "^9.3.2",
     "@duckdb/duckdb-wasm": "^1.33.1-dev45.0",
     "lucide-react": "^1.14.0",
     "maplibre-gl": "^5.24.0",

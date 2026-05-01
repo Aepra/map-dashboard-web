@@ -40,7 +40,7 @@ download.on('close', (code) => {
   // Step 3: Start dev server
   console.log('🔨 Starting Vite dev server...\n');
   const devCommand = isWindows ? 'npx vite' : 'vite';
-  const dev = spawn(devCommand, [], {
+  const dev = spawn(devCommand, ['--host', '0.0.0.0'], {
     cwd: dirname(__dirname),
     stdio: 'inherit',
     shell: isWindows,

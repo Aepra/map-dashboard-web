@@ -1,24 +1,17 @@
 version: '3.8'
 
 services:
-  ppdb-dashboard:
+  web:
     build: .
     container_name: ppdb-dashboard
     ports:
-      - "5176:5176"
+      - "5173:5173"
     volumes:
-      - ./public/data:/app/public/data
       - ./src:/app/src
-      - node_modules:/app/node_modules
+      - ./public:/app/public
+      - /app/node_modules
     environment:
       - NODE_ENV=development
-    networks:
-      - ppdb-network
+    stdin_open: true
+    tty: true
     restart: unless-stopped
-
-volumes:
-  node_modules:
-
-networks:
-  ppdb-network:
-    driver: bridge

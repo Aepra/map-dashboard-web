@@ -7,7 +7,9 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // Hooks & Utilities
 import { useDuckDBData } from './PetaMap/useDuckDBData';
 import { useFilteredData } from './PetaMap/useFilteredData';
-import { createSchoolLayer, createStudentLayer } from './PetaMap/createLayer';
+import { useFilterMetrics, formatCount } from './PetaMap/useFilterMetrics';
+import { useSchoolData } from './PetaMap/useSchoolData';
+import { createSchoolLayer, createStudentLayer, createLineLayer } from './PetaMap/createLayer';
 import MapSidebar from './PetaMap/MapSidebar';
 
 // Components
@@ -43,7 +45,7 @@ const PetaMap = () => {
   const [statusSearch, setStatusSearch] = useState('');
   const [vizMode] = useState('normal');
   const [selectedSchool, setSelectedSchool] = useState(null);
-  
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   const mapController = useMemo(
     () => ({
@@ -60,48 +62,11 @@ const PetaMap = () => {
 
   const zoomBucket = useMemo(() => Math.round(viewState.zoom * 2) / 2, [viewState.zoom]);
 
-  // Compute counts for each jenjang
-  const jenjangCounts = useMemo(() => {
-    const counts = { SD: 0, SMP: 0, PAUD: 0 };
-    data.forEach((r) => {
-      if (r.jenjang) {
-        if (r.jenjang.includes('SD')) counts.SD++;
-        if (r.jenjang.includes('SMP')) counts.SMP++;
-        if (r.jenjang.includes('PAUD')) counts.PAUD++;
-      }
-    });
-    return counts;
-  }, [data]);
-
-  // Helper to format large numbers
-  const formatCount = (num) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + ' M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + ' K';
-    return num.toString();
-  };
+  const { jenjangCounts, statusCounts, jalurOptions, jalurCounts } = useFilterMetrics(data);
 
   const allJenjangSelected = checkedJenjang.SD && checkedJenjang.SMP && checkedJenjang.PAUD;
 
-  const statusCounts = useMemo(() => {
-    const counts = { diterima: 0, tidak: 0 };
-    data.forEach((r) => {
-      const t = (r.status_penerimaan || '').toString().toLowerCase();
-      if (t.includes('terima') || t.includes('lulus')) counts.diterima++;
-      if (t.includes('tidak')) counts.tidak++;
-    });
-    return counts;
-  }, [data]);
-
   const allStatusSelected = checkedStatus.diterima && checkedStatus.tidak;
-  // derive available `jalur` values from data
-  const jalurOptions = useMemo(() => {
-    const s = new Set();
-    data.forEach((r) => {
-      const jalur = (r.jalur || '').trim();
-      if (jalur) s.add(jalur);
-    });
-    return Array.from(s).filter(Boolean).sort();
-  }, [data]);
 
   // initialize checkedJalur state from jalurOptions
   const initialCheckedJalur = useMemo(() => {
@@ -114,15 +79,6 @@ const PetaMap = () => {
 
   const [checkedJalur, setCheckedJalur] = useState(initialCheckedJalur);
   const [jalurSearch, setJalurSearch] = useState('');
-
-  const jalurCounts = useMemo(() => {
-    const counts = {};
-    data.forEach((r) => {
-      const jalur = (r.jalur || '').trim();
-      if (jalur) counts[jalur] = (counts[jalur] || 0) + 1;
-    });
-    return counts;
-  }, [data]);
 
   const allJalurSelected = jalurOptions.length > 0 && jalurOptions.every((j) => checkedJalur[j]);
 
@@ -165,44 +121,21 @@ const PetaMap = () => {
     return { total, sd, smp, paud };
   }, [filteredData]);
 
-  const schoolData = useMemo(() => {
-    if (filteredData.length === 0) return [];
-    const schoolMap = new Map();
-
-    const getMedian = (values) => {
-      if (!values.length) return 0;
-      const sorted = [...values].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
-      return sorted[mid];
-    };
-
-    filteredData.forEach((row) => {
-      const name = row.nama_sekolah_tujuan || 'N/A';
-      if (!schoolMap.has(name)) {
-        schoolMap.set(name, {
-          nama: name,
-          lintangList: [],
-          bujurList: [],
-          totalSiswa: 0,
-        });
-      }
-      const entry = schoolMap.get(name);
-      entry.lintangList.push(row.lintang);
-      entry.bujurList.push(row.bujur);
-      entry.totalSiswa += 1;
-    });
-
-    return Array.from(schoolMap.values()).map((entry) => ({
-      nama: entry.nama,
-      lintang: getMedian(entry.lintangList),
-      bujur: getMedian(entry.bujurList),
-      totalSiswa: entry.totalSiswa,
-    }));
-  }, [filteredData]);
+  const schoolData = useSchoolData(filteredData);
 
   const handleSelectSchool = useCallback((schoolName) => {
     setSelectedSchool((prev) => (prev === schoolName ? null : schoolName));
+  }, []);
+
+  const handleSelectStudent = useCallback((student) => {
+    setSelectedStudent((prev) => {
+      // If clicking the same student, deselect
+      if (prev && prev.id_peserta === student.id_peserta) {
+        return null;
+      }
+      // Otherwise select the new student
+      return student;
+    });
   }, []);
 
   /**
@@ -211,12 +144,33 @@ const PetaMap = () => {
   const layers = useMemo(
     () => {
       if (filteredData.length === 0) return [];
-      return [
-        createStudentLayer(filteredData, zoomBucket, vizMode),
-        createSchoolLayer(schoolData, zoomBucket, handleSelectSchool),
-      ];
+      
+      const baseLayers = [];
+      
+      // If no student selected, show all students and schools
+      if (!selectedStudent) {
+        baseLayers.push(createStudentLayer(filteredData, zoomBucket, vizMode, handleSelectStudent));
+        baseLayers.push(createSchoolLayer(schoolData, zoomBucket, handleSelectSchool));
+      } else {
+        // If student selected, show only the selected student and destination school + connecting line
+        baseLayers.push(createStudentLayer([selectedStudent], zoomBucket, vizMode, handleSelectStudent));
+        
+        // Show only the destination school
+        const destSchool = schoolData.find(s => s.nama === selectedStudent.nama_sekolah_tujuan);
+        if (destSchool) {
+          baseLayers.push(createSchoolLayer([destSchool], zoomBucket, handleSelectSchool));
+        }
+        
+        // Add the connecting line
+        const lineLayer = createLineLayer(selectedStudent, schoolData);
+        if (lineLayer) {
+          baseLayers.push(lineLayer);
+        }
+      }
+      
+      return baseLayers;
     },
-    [filteredData, schoolData, zoomBucket, vizMode, handleSelectSchool]
+    [filteredData, schoolData, zoomBucket, vizMode, handleSelectStudent, handleSelectSchool, selectedStudent]
   );
   /**
    * Memoized Tooltip

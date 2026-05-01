@@ -1,4 +1,4 @@
-import { IconLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { IconLayer, ScatterplotLayer, LineLayer } from '@deck.gl/layers';
 import { LAYER_CONFIG, COLORS } from './constants';
 
 /**
@@ -102,7 +102,7 @@ const getSdColor = (schoolName) => {
   return getDistinctSchoolColor(schoolName, 332);
 };
 
-export const createStudentLayer = (filteredData, zoom, vizMode) => {
+export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent) => {
   const config = vizMode === 'dense' ? LAYER_CONFIG.dense : LAYER_CONFIG.normal;
 
   const getRadius = () => {
@@ -129,6 +129,9 @@ export const createStudentLayer = (filteredData, zoom, vizMode) => {
     opacity: Math.min(config.opacity, 0.65),
     stroked: false,
     lineWidthMinPixels: 0,
+    onClick: ({ object }) => {
+      if (object && onSelectStudent) onSelectStudent(object);
+    },
     updateTriggers: {
       getRadius: [zoom],
     },
@@ -161,5 +164,36 @@ export const createSchoolLayer = (schoolData, zoom, onSelectSchool) => {
     onClick: ({ object }) => {
       if (object && onSelectSchool) onSelectSchool(object.nama);
     },
+  });
+};
+
+export const createLineLayer = (selectedStudent, schoolData) => {
+  if (!selectedStudent || !schoolData) return null;
+
+  // Find the school that matches the selected student's destination
+  const destinationSchool = schoolData.find(
+    (s) => s.nama === selectedStudent.nama_sekolah_tujuan
+  );
+
+  if (!destinationSchool) return null;
+
+  // Create line data connecting student to school
+  const lineData = [
+    {
+      sourcePosition: [selectedStudent.bujur, selectedStudent.lintang],
+      targetPosition: [destinationSchool.bujur, destinationSchool.lintang],
+    },
+  ];
+
+  return new LineLayer({
+    id: 'student-to-school-line',
+    data: lineData,
+    getSourcePosition: (d) => d.sourcePosition,
+    getTargetPosition: (d) => d.targetPosition,
+    getColor: () => [59, 130, 246], // Blue color RGB
+    getWidth: () => 2,
+    widthUnits: 'pixels',
+    opacity: 0.8,
+    pickable: false,
   });
 };

@@ -5,7 +5,7 @@ import React from 'react';
  */
 export const StatsPanel = ({ stats }) => {
   return (
-    <div className="absolute bottom-4 right-4 bg-white/90 rounded-lg shadow-md backdrop-blur-sm z-40 pointer-events-none border border-gray-200 px-3 py-2.5">
+    <div className="bg-white/90 rounded-lg shadow-md backdrop-blur-sm pointer-events-none border border-gray-200 px-3 py-2.5">
       <div className="grid grid-cols-4 gap-3">
         <div className="text-center">
           <div className="text-xs text-gray-600 mb-1">Total</div>

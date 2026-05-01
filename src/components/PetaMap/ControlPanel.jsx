@@ -8,6 +8,7 @@ export const ControlPanel = ({
   setCheckedJenjang,
   vizMode,
   setVizMode,
+  selectedSchool,
   filteredCount,
   totalCount,
 }) => {
@@ -32,7 +33,7 @@ export const ControlPanel = ({
   };
 
   return (
-    <div className="absolute top-4 left-4 bg-white/90 rounded-lg shadow-md backdrop-blur-sm w-72 z-40 border border-gray-200">
+    <div className="bg-white/90 rounded-lg shadow-md backdrop-blur-sm w-72 border border-gray-200">
       {/* Header with compact layout */}
       <div className="px-3 py-2.5 border-b border-gray-100">
         <div className="flex items-center justify-between">
@@ -64,6 +65,15 @@ export const ControlPanel = ({
               </span>
             </label>
           ))}
+        </div>
+      )}
+
+      {selectedSchool && (
+        <div className="px-3 py-2.5 border-b border-gray-100 bg-blue-50">
+          <div className="text-xs font-medium text-gray-600">Sekolah Terpilih</div>
+          <div className="text-xs font-semibold text-gray-900 truncate mt-0.5">
+            {selectedSchool}
+          </div>
         </div>
       )}
 

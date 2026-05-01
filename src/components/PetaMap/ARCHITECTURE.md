@@ -9,6 +9,8 @@ src/components/
     ├── constants.js                      # Config & constants
     ├── useDuckDBData.js                  # Hook: DuckDB initialization & data loading
     ├── useFilteredData.js                # Hook: Filtering logic
+    ├── useFilterMetrics.js               # Hook: Dropdown counts & format helper
+    ├── useSchoolData.js                  # Hook: Aggregate school markers
     ├── createLayer.js                    # Layer factory function
     ├── LoadingOverlay.jsx                # Loading state UI
     ├── ErrorOverlay.jsx                  # Error state UI
@@ -45,6 +47,16 @@ src/components/
 - Memoized filtering by jenjang & status
 - Dependency: `[data, selectedJenjang, selectedStatus]`
 - Return: filtered array (only recalculate when dependencies change)
+
+### **useFilterMetrics.js** (Custom Hook)
+- Computes jenjang, status, and jalur counts from the raw dataset
+- Exposes `formatCount()` for compact dropdown labels
+- Keeps metric logic out of the main component
+
+### **useSchoolData.js** (Custom Hook)
+- Aggregates per-school markers for the map layer
+- Calculates median coordinates so school pins stay stable
+- Keeps school-layer logic isolated from `PetaMap.jsx`
 
 ### **createLayer.js** (Layer Factory)
 - Factory function untuk membuat ScatterplotLayer

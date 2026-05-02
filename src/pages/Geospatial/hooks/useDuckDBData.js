@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { initDuckDB, getCachedData } from './duckdbEngine';
+import { tableFromIPC } from 'apache-arrow';
 
 const buildDropdownOptions = (rows = []) => {
   const jenjang = new Set();
@@ -24,10 +25,29 @@ let workerInstance = null;
 
 function getWorker() {
   if (!workerInstance) {
-    workerInstance = new Worker(new URL('./dataWorker.js', import.meta.url));
+    workerInstance = new Worker(new URL('./dataWorker.js', import.meta.url), { type: 'module' });
   }
   return workerInstance;
 }
+
+const arrowTableToRows = (table) => {
+  if (!table || !table.schema) return [];
+
+  const columnNames = table.schema.fields.map((field) => field.name);
+  const columns = columnNames.map((_, index) => table.getChildAt(index));
+  const rowCount = table.numRows || 0;
+  const rows = new Array(rowCount);
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+    const row = {};
+    for (let columnIndex = 0; columnIndex < columnNames.length; columnIndex += 1) {
+      row[columnNames[columnIndex]] = columns[columnIndex]?.get(rowIndex) ?? null;
+    }
+    rows[rowIndex] = row;
+  }
+
+  return rows;
+};
 
 export const useDuckDBData = (viewportBounds, filters, limit = null) => {
   const [data, setData] = useState([]);
@@ -51,10 +71,28 @@ export const useDuckDBData = (viewportBounds, filters, limit = null) => {
       const { type, payload } = e.data;
 
       if (type === 'VIEWPORT_DATA') {
-        // Guard: only update if data actually changed
-        if (JSON.stringify(previousDataRef.current) !== JSON.stringify(payload)) {
-          previousDataRef.current = payload;
-          setData(payload);
+        const nextRows = payload ? arrowTableToRows(tableFromIPC(payload)) : [];
+
+        // Guard: lightweight change detection to avoid expensive JSON.stringify
+        const prev = previousDataRef.current;
+        let isSame = false;
+        if (prev && Array.isArray(prev) && Array.isArray(nextRows) && prev.length === nextRows.length) {
+          // Compare a small sample (first few id values) to detect change quickly
+          const sampleCount = Math.min(5, nextRows.length);
+          isSame = true;
+          for (let i = 0; i < sampleCount; i += 1) {
+            const prevId = prev[i] && (prev[i].id_peserta || prev[i].id || prev[i].pendaftaran_id);
+            const newId = nextRows[i] && (nextRows[i].id_peserta || nextRows[i].id || nextRows[i].pendaftaran_id);
+            if (prevId !== newId) {
+              isSame = false;
+              break;
+            }
+          }
+        }
+
+        if (!isSame) {
+          previousDataRef.current = nextRows;
+          setData(nextRows);
         }
         setLoading(false);
       }
@@ -112,15 +150,19 @@ export const useDuckDBData = (viewportBounds, filters, limit = null) => {
 
     setLoading(true);
 
-    worker.postMessage({
-      type: 'FILTER_VIEWPORT',
-      payload: {
-        data: allData,
-        bounds: viewportBounds,
-        filters,
-        limit,
-      },
-    });
+    // Debounce rapid changes to avoid flooding the worker/main thread
+    if (workerListenerAttachedRef.current && worker._debounceTimer) clearTimeout(worker._debounceTimer);
+    worker._debounceTimer = setTimeout(() => {
+      worker.postMessage({
+        type: 'FILTER_VIEWPORT',
+        payload: {
+          data: allData,
+          bounds: viewportBounds,
+          filters,
+          limit,
+        },
+      });
+    }, 120);
   }, [initialized, viewportBounds, filters, limit]);
 
   // STATS - update when filters change

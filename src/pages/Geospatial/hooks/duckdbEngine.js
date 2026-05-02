@@ -53,28 +53,59 @@ export async function initDuckDB() {
       throw new Error('Gagal memuat parquet dari local maupun GitHub source');
     }
 
-    // Detect schema and columns
+    // Detect schema and columns (with flexible name mapping)
     const sampleRow = sampleResult.toArray()[0]?.toJSON() || {};
-    const availableColumns = Object.keys(sampleRow);
+    const availableColumns = Object.keys(sampleRow || {});
     globalCache.schema = availableColumns;
-    const lowerCols = availableColumns.map(c => c.toLowerCase());
-    if (lowerCols.includes('pendaftaran_id')) globalCache.idColumn = availableColumns[lowerCols.indexOf('pendaftaran_id')];
-    else if (lowerCols.includes('id')) globalCache.idColumn = availableColumns[lowerCols.indexOf('id')];
-    else if (lowerCols.includes('id_peserta')) globalCache.idColumn = availableColumns[lowerCols.indexOf('id_peserta')];
-    else if (lowerCols.includes('no_peserta')) globalCache.idColumn = availableColumns[lowerCols.indexOf('no_peserta')];
-    else if (lowerCols.includes('peserta_id')) globalCache.idColumn = availableColumns[lowerCols.indexOf('peserta_id')];
-    else if (lowerCols.includes('no_urut')) globalCache.idColumn = availableColumns[lowerCols.indexOf('no_urut')];
-    else if (lowerCols.includes('nomor_peserta')) globalCache.idColumn = availableColumns[lowerCols.indexOf('nomor_peserta')];
-    if (lowerCols.includes('jalur')) {
-      globalCache.jalurColumn = availableColumns[lowerCols.indexOf('jalur')];
-    } else {
-      const jalurIdx = lowerCols.findIndex((c) => c.includes('jalur'));
-      if (jalurIdx >= 0) globalCache.jalurColumn = availableColumns[jalurIdx];
+    const lowerCols = availableColumns.map((c) => String(c).toLowerCase());
+
+    const findCol = (candidates) => {
+      for (const cand of candidates) {
+        const idx = lowerCols.indexOf(cand);
+        if (idx >= 0) return availableColumns[idx];
+      }
+      // fallback: find substring match
+      for (const cand of candidates) {
+        const idx = lowerCols.findIndex((c) => c.includes(cand));
+        if (idx >= 0) return availableColumns[idx];
+      }
+      return null;
+    };
+
+    // Common alternative names
+    const latCol = findCol(['lintang', 'latitude', 'lat', 'y']);
+    const lonCol = findCol(['bujur', 'longitude', 'long', 'lon', 'lng', 'x']);
+    const schoolLatCol = findCol(['lintang_sekolah', 'latitude_sekolah', 'lat_sekolah', 'school_lat']);
+    const schoolLonCol = findCol(['bujur_sekolah', 'longitude_sekolah', 'lon_sekolah', 'lng_sekolah', 'school_lon']);
+    const jenjangCol = findCol(['jenjang', 'grade', 'level']);
+    const namaSekolahCol = findCol(['nama_sekolah_tujuan', 'nama_sekolah', 'school_name', 'sekolah']);
+    const statusCol = findCol(['status_penerimaan', 'status', 'hasil', 'status_keputusan']);
+
+    // ID and jalur detection (existing logic expanded)
+    if (!globalCache.idColumn) {
+      const idCandidates = ['pendaftaran_id', 'id', 'id_peserta', 'no_peserta', 'peserta_id', 'no_urut', 'nomor_peserta'];
+      globalCache.idColumn = findCol(idCandidates);
     }
-    // Query all data ONCE
-    let selectClause = `CAST(lintang AS DOUBLE) as lintang,CAST(bujur AS DOUBLE) as bujur,CAST(jenjang AS VARCHAR) as jenjang,CAST(nama_sekolah_tujuan AS VARCHAR) as nama_sekolah_tujuan,CAST(status_penerimaan AS VARCHAR) as status_penerimaan`;
-    if (globalCache.idColumn) selectClause += `,CAST(\"${globalCache.idColumn}\" AS VARCHAR) as id_peserta`;
-    if (globalCache.jalurColumn) selectClause += `,CAST(\"${globalCache.jalurColumn}\" AS VARCHAR) as jalur`;
+    if (!globalCache.jalurColumn) {
+      globalCache.jalurColumn = findCol(['jalur', 'path', 'channel']);
+    }
+
+    // Ensure we have participant lat/lon and school name at minimum
+    if (!latCol || !lonCol || !namaSekolahCol) {
+      throw new Error(`Parquet schema missing required columns. Found: ${availableColumns.join(', ')}. Expected lat/lon and school name (e.g. lintang/bujur, nama_sekolah_tujuan).`);
+    }
+
+    // Build select clause using detected column names and alias to standard fields used in app
+    let selectClause = `CAST("${latCol}" AS DOUBLE) as lintang, CAST("${lonCol}" AS DOUBLE) as bujur, CAST("${jenjangCol || 'NULL'}" AS VARCHAR) as jenjang, CAST("${namaSekolahCol}" AS VARCHAR) as nama_sekolah_tujuan, CAST("${statusCol || 'NULL'}" AS VARCHAR) as status_penerimaan`;
+    if (schoolLatCol) selectClause += `,CAST("${schoolLatCol}" AS DOUBLE) as lintang_sekolah`;
+    else selectClause += `,CAST(NULL AS DOUBLE) as lintang_sekolah`;
+    if (schoolLonCol) selectClause += `,CAST("${schoolLonCol}" AS DOUBLE) as bujur_sekolah`;
+    else selectClause += `,CAST(NULL AS DOUBLE) as bujur_sekolah`;
+    selectClause += `,CAST(NULL AS VARCHAR) as koordinat_sekolah`;
+    selectClause += `,CAST(NULL AS VARCHAR) as koordinat_peserta`;
+    selectClause += `,CAST(NULL AS DOUBLE) as jarak_meter`;
+    if (globalCache.idColumn) selectClause += `,CAST("${globalCache.idColumn}" AS VARCHAR) as id_peserta`;
+    if (globalCache.jalurColumn) selectClause += `,CAST("${globalCache.jalurColumn}" AS VARCHAR) as jalur`;
     else selectClause += `,CAST(NULL AS VARCHAR) as jalur`;
     const query = `SELECT ${selectClause} FROM '${activeParquetAlias}'`;
     const resultAll = await globalCache.conn.query(query);

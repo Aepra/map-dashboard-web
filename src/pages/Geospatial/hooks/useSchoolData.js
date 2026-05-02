@@ -9,25 +9,50 @@ export const useSchoolData = (data) => {
 
     const schoolMap = new Map();
 
-    const getMedian = (values) => {
-      if (!values.length) return 0;
-      const sorted = [...values].sort((a, b) => a - b);
+    const normalizeNumber = (value) => {
+      const num = Number(value);
+      return Number.isFinite(num) ? num : null;
+    };
+
+    const pickBestCoordinate = (values, fallbackValues = []) => {
+      const validValues = values.filter((value) => Number.isFinite(value) && value !== 0);
+      if (validValues.length > 0) {
+        const first = validValues[0];
+        const allSame = validValues.every((value) => value === first);
+        if (allSame) return first;
+
+        // Use median only when source rows disagree, so the displayed point stays stable.
+        const sorted = [...validValues].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+      }
+
+      const fallbackValid = fallbackValues.filter((value) => Number.isFinite(value) && value !== 0);
+      if (fallbackValid.length === 0) return null;
+      const first = fallbackValid[0];
+      const allSame = fallbackValid.every((value) => value === first);
+      if (allSame) return first;
+
+      const sorted = [...fallbackValid].sort((a, b) => a - b);
       const mid = Math.floor(sorted.length / 2);
-      if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
-      return sorted[mid];
+      return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
     };
 
     data.forEach((student) => {
       const schoolName = student.nama_sekolah_tujuan || 'N/A';
       const jenjang = String(student.jenjang || '');
-      const lintang = Number(student.lintang) || 0;
-      const bujur = Number(student.bujur) || 0;
+      const participantLat = normalizeNumber(student.lintang);
+      const participantLon = normalizeNumber(student.bujur);
+      const schoolLat = normalizeNumber(student.lintang_sekolah);
+      const schoolLon = normalizeNumber(student.bujur_sekolah);
 
       if (!schoolMap.has(schoolName)) {
         schoolMap.set(schoolName, {
           nama: schoolName,
-          lintangList: [],
-          bujurList: [],
+          schoolLatList: [],
+          schoolLonList: [],
+          participantLatList: [],
+          participantLonList: [],
           totalSiswa: 0,
           sdCount: 0,
           smpCount: 0,
@@ -37,8 +62,10 @@ export const useSchoolData = (data) => {
 
       const school = schoolMap.get(schoolName);
       school.totalSiswa += 1;
-      school.lintangList.push(lintang);
-      school.bujurList.push(bujur);
+  if (schoolLat !== null) school.schoolLatList.push(schoolLat);
+  if (schoolLon !== null) school.schoolLonList.push(schoolLon);
+  if (participantLat !== null) school.participantLatList.push(participantLat);
+  if (participantLon !== null) school.participantLonList.push(participantLon);
 
       if (jenjang.includes('SD')) school.sdCount += 1;
       else if (jenjang.includes('SMP')) school.smpCount += 1;
@@ -50,8 +77,8 @@ export const useSchoolData = (data) => {
 
     return schools.map((school) => ({
       nama: school.nama,
-      lintang: getMedian(school.lintangList),
-      bujur: getMedian(school.bujurList),
+      lintang: pickBestCoordinate(school.schoolLatList, school.participantLatList),
+      bujur: pickBestCoordinate(school.schoolLonList, school.participantLonList),
       totalSiswa: school.totalSiswa,
       sdCount: school.sdCount,
       smpCount: school.smpCount,

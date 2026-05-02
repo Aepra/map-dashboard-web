@@ -105,32 +105,39 @@ const GeospatialMap = () => {
     const object = hovered.object;
     if (!object) return null;
 
-    // If hovering over student layer
+    // If hovering over student layer — show compact, non-sensitive summary
     if (hovered.layer?.id === 'pendaftar-layer') {
+      const coords = object && object.lintang && object.bujur ? `${Number(object.lintang).toFixed(4)}, ${Number(object.bujur).toFixed(4)}` : '';
       return {
         x: hovered.x,
         y: hovered.y,
         html: `
-          <div style="padding: 8px; font-size: 12px; color: #1f2937; max-width: 250px; border-radius: 6px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);">
-            <div><strong>${object.nama_sekolah_tujuan || 'N/A'}</strong></div>
-            <div>Jenjang: ${object.jenjang || 'N/A'}</div>
-            <div>Status: ${object.status_penerimaan || 'N/A'}</div>
-            <div style="color: #6b7280; font-size: 11px; margin-top: 4px;">ID: ${object.id_peserta || 'N/A'}</div>
+          <div style="padding: 8px; font-size: 12px; color: #111827; max-width: 300px; border-radius: 8px; background: rgba(255,255,255,0.96); box-shadow: 0 4px 20px rgba(2,6,23,0.12);">
+            <div style="font-weight:700; margin-bottom:6px;">${object.nama_sekolah_tujuan || 'Sekolah: N/A'}</div>
+            <div style="font-size:12px; color:#374151">Jenjang: <strong style="color:#111827">${object.jenjang || 'N/A'}</strong></div>
+            <div style="font-size:12px; color:#374151">Jalur: <strong style="color:#111827">${object.jalur || 'N/A'}</strong></div>
+            <div style="font-size:12px; color:#374151">Status: <strong style="color:${object.status_penerimaan === 'Diterima' ? '#047857' : object.status_penerimaan === 'Cadangan' ? '#B45309' : '#B91C1C'}">${object.status_penerimaan || 'N/A'}</strong></div>
+            ${coords ? `<div style="margin-top:6px;font-size:11px;color:#6b7280">Koordinat: ${coords}</div>` : ''}
           </div>
         `,
       };
     }
 
-    // If hovering over school layer
+    // If hovering over school layer — show counts and quick breakdown
     if (hovered.layer?.id === 'sekolah-layer') {
+      const total = object.totalSiswa || 0;
+      const sd = object.sdCount || 0;
+      const smp = object.smpCount || 0;
+      const paud = object.paudCount || 0;
       return {
         x: hovered.x,
         y: hovered.y,
         html: `
-          <div style="padding: 8px; font-size: 12px; color: #1f2937; max-width: 250px; border-radius: 6px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);">
-            <div><strong>${object.nama || 'N/A'}</strong></div>
-            <div>Total Siswa: ${object.totalSiswa || 0}</div>
-            <div>SD: ${object.sdCount || 0} | SMP: ${object.smpCount || 0} | PAUD: ${object.paudCount || 0}</div>
+          <div style="padding:10px; font-size:12px; color:#0f172a; max-width:320px; border-radius:8px; background:rgba(255,255,255,0.98); box-shadow:0 6px 28px rgba(2,6,23,0.12);">
+            <div style="font-weight:700; margin-bottom:6px;">${object.nama || 'Sekolah'}</div>
+            <div style="font-size:13px; color:#374151">Total Siswa: <strong style="color:#0b5cff">${total.toLocaleString('id-ID')}</strong></div>
+            <div style="font-size:12px; color:#4b5563; margin-top:6px">Rincian: SD ${sd}, SMP ${smp}, PAUD ${paud}</div>
+            ${object.bujur && object.lintang ? `<div style="margin-top:6px;font-size:11px;color:#6b7280">Koordinat: ${Number(object.lintang).toFixed(4)}, ${Number(object.bujur).toFixed(4)}</div>` : ''}
           </div>
         `,
       };
@@ -337,13 +344,23 @@ const GeospatialMap = () => {
         />
       )}
 
-      {/* Info Panel - Bottom Left */}
+      {/* Info Panel - Bottom Left: student or school details */}
       {selectedStudent && (
         <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 100 }}>
           <InfoPanel
             selectedStudent={selectedStudent}
             selectedSchool={selectedSchool}
             onClose={() => setSelectedStudent(null)}
+          />
+        </div>
+      )}
+      {!selectedStudent && selectedSchool && (
+        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 100 }}>
+          <InfoPanel
+            selectedStudent={null}
+            selectedSchool={selectedSchool}
+            schoolData={schoolData}
+            onClose={() => setSelectedSchool(null)}
           />
         </div>
       )}

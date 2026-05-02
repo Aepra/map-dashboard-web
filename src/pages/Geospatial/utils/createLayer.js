@@ -1,45 +1,80 @@
 import { IconLayer, ScatterplotLayer, LineLayer } from '@deck.gl/layers';
 import { LAYER_CONFIG, COLORS } from '../utils/constants';
+import { getSchoolColorRGB } from './schoolColors';
 
 /**
  * Factory function untuk membuat ScatterplotLayer
  * Optimized dengan memoization di parent component
  */
-const SCHOOL_ICON_URL =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' +
-      '<defs>' +
-        '<linearGradient id="roofGrad" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0%" stop-color="#ef4444"/>' +
-          '<stop offset="100%" stop-color="#b91c1c"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="wallGrad" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0%" stop-color="#ffffff"/>' +
-          '<stop offset="100%" stop-color="#dbeafe"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="sideGrad" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0%" stop-color="#bfdbfe"/>' +
-          '<stop offset="100%" stop-color="#93c5fd"/>' +
-        '</linearGradient>' +
-        '<filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">' +
-          '<feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.35"/>' +
-        '</filter>' +
-      '</defs>' +
-      '<g filter="url(#shadow)">' +
-        '<path d="M48 14L14 32h68L48 14z" fill="url(#roofGrad)"/>' +
-        '<path d="M22 34h52v40H22z" fill="url(#wallGrad)"/>' +
-        '<path d="M74 34l8-2v42l-8 0z" fill="url(#sideGrad)"/>' +
-        '<path d="M22 34l-8-2v42l8 0z" fill="#bfdbfe"/>' +
-        '<rect x="43" y="52" width="10" height="22" rx="1.5" fill="#1e3a8a"/>' +
-        '<rect x="30" y="44" width="9" height="8" fill="#60a5fa"/>' +
-        '<rect x="57" y="44" width="9" height="8" fill="#60a5fa"/>' +
-        '<rect x="30" y="58" width="9" height="8" fill="#60a5fa"/>' +
-        '<rect x="57" y="58" width="9" height="8" fill="#60a5fa"/>' +
-        '<rect x="38" y="23" width="20" height="7" rx="1.5" fill="#fef3c7"/>' +
-      '</g>' +
-    '</svg>'
+const parseRgb = (colorValue) => {
+  const matches = colorValue.match(/\d+/g);
+  if (!matches || matches.length < 3) return [255, 255, 255];
+  return matches.slice(0, 3).map((component) => Number(component));
+};
+
+const clampChannel = (value) => Math.max(0, Math.min(255, Math.round(value)));
+
+const tintRgb = ([red, green, blue], factor) =>
+  [
+    clampChannel(red * factor),
+    clampChannel(green * factor),
+    clampChannel(blue * factor),
+  ].join(',');
+
+const createSchoolIconUrl = (schoolName) => {
+  const baseColor = parseRgb(getSchoolColorRGB(schoolName));
+  const roofColor = tintRgb(baseColor, 0.82);
+  const wallColor = tintRgb(baseColor, 1.18);
+  const sideColor = tintRgb(baseColor, 0.96);
+  const accentColor = tintRgb(baseColor, 1.35);
+  const shadowColor = tintRgb(baseColor, 0.58);
+
+  return (
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' +
+        '<defs>' +
+          '<linearGradient id="roofGrad" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="rgb(' + roofColor + ')"/>' +
+            '<stop offset="100%" stop-color="rgb(' + shadowColor + ')"/>' +
+          '</linearGradient>' +
+          '<linearGradient id="wallGrad" x1="0" y1="0" x2="1" y2="1">' +
+            '<stop offset="0%" stop-color="rgb(' + wallColor + ')"/>' +
+            '<stop offset="100%" stop-color="#ffffff"/>' +
+          '</linearGradient>' +
+          '<linearGradient id="sideGrad" x1="0" y1="0" x2="1" y2="1">' +
+            '<stop offset="0%" stop-color="rgb(' + sideColor + ')"/>' +
+            '<stop offset="100%" stop-color="rgb(' + shadowColor + ')"/>' +
+          '</linearGradient>' +
+          '<filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">' +
+            '<feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.35"/>' +
+          '</filter>' +
+        '</defs>' +
+        '<g filter="url(#shadow)">' +
+          '<path d="M48 14L14 32h68L48 14z" fill="url(#roofGrad)"/>' +
+          '<path d="M22 34h52v40H22z" fill="url(#wallGrad)"/>' +
+          '<path d="M74 34l8-2v42l-8 0z" fill="url(#sideGrad)"/>' +
+          '<path d="M22 34l-8-2v42l8 0z" fill="url(#sideGrad)"/>' +
+          '<rect x="43" y="52" width="10" height="22" rx="1.5" fill="rgb(' + shadowColor + ')"/>' +
+          '<rect x="30" y="44" width="9" height="8" fill="rgb(' + accentColor + ')"/>' +
+          '<rect x="57" y="44" width="9" height="8" fill="rgb(' + accentColor + ')"/>' +
+          '<rect x="30" y="58" width="9" height="8" fill="rgb(' + accentColor + ')"/>' +
+          '<rect x="57" y="58" width="9" height="8" fill="rgb(' + accentColor + ')"/>' +
+          '<rect x="38" y="23" width="20" height="7" rx="1.5" fill="#fef3c7"/>' +
+        '</g>' +
+      '</svg>'
+    )
   );
+};
+
+const getEstimatedStudentSize = (zoom) => {
+  if (zoom < 8) return 2;
+  if (zoom < 11) return 3;
+  if (zoom < 14) return 5;
+  return 11;
+};
+
+const getSchoolIconSize = (zoom) => getEstimatedStudentSize(zoom) * 3;
 
 const hashString = (value) => {
   let hash = 0;
@@ -197,18 +232,7 @@ export const createSchoolLayer = (schoolData, zoom, onSelectSchool) => {
   const shouldShow = zoom >= 9.5; // Show schools earlier for better context
   const isDetailedView = zoom >= 12;
 
-  const getSize = (d) => {
-    // Adaptive sizing based on zoom
-    if (zoom < 10) return 8; // Minimal size when far
-    if (zoom < 12) return 12; // Medium size
-    if (zoom < 14) return 16; // Larger when closer
-    return 20; // Full size when very close
-
-    // Alternative: logarithmic scale based on student count
-    // const base = zoom < 12 ? 10 : 16;
-    // const scale = Math.log2(Math.max(1, d.totalSiswa));
-    // return Math.max(8, Math.min(24, base + scale * 1.5));
-  };
+  const getSize = () => getSchoolIconSize(zoom);
 
   const getOpacity = () => {
     if (zoom < 9.5) return 0; // Hidden
@@ -221,8 +245,8 @@ export const createSchoolLayer = (schoolData, zoom, onSelectSchool) => {
     id: 'sekolah-layer',
     data: shouldShow ? schoolData : [], // Empty array when hidden = no render cost
     getPosition: (d) => [d.bujur, d.lintang],
-    getIcon: () => ({
-      url: SCHOOL_ICON_URL,
+    getIcon: (d) => ({
+      url: createSchoolIconUrl(d.nama),
       width: 96,
       height: 96,
       anchorY: 90,
@@ -230,7 +254,7 @@ export const createSchoolLayer = (schoolData, zoom, onSelectSchool) => {
     getSize,
     sizeUnits: 'pixels',
     sizeScale: 1,
-    getColor: () => [31, 41, 55],
+    getColor: () => [255, 255, 255],
     opacity: getOpacity(),
     pickable: zoom >= 10, // Only clickable when visible
     wrapLongitude: false,

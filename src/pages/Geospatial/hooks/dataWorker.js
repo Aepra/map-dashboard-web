@@ -1,5 +1,29 @@
+import { tableFromArrays, tableToIPC } from 'apache-arrow';
+
 // dataWorker.js
 // Web Worker for filtering, transformation, and viewport slicing
+
+const buildArrowIpcFromRows = (rows) => {
+  if (!rows || rows.length === 0) return null;
+
+  const columnNames = Object.keys(rows[0] || {});
+  const columns = {};
+
+  for (const columnName of columnNames) {
+    columns[columnName] = new Array(rows.length);
+  }
+
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    const row = rows[rowIndex];
+    for (const columnName of columnNames) {
+      columns[columnName][rowIndex] = row[columnName] ?? null;
+    }
+  }
+
+  const table = tableFromArrays(columns);
+  return tableToIPC(table, 'stream');
+};
+
 self.onmessage = function(e) {
   const { type, payload } = e.data;
   if (type === 'FILTER_VIEWPORT') {
@@ -20,8 +44,9 @@ self.onmessage = function(e) {
     }
     // Hard limit
     if (limit && filtered.length > limit) filtered = filtered.slice(0, limit);
-    // Return only viewport data
-    self.postMessage({ type: 'VIEWPORT_DATA', payload: filtered });
+    // Return only viewport data as Arrow IPC binary
+    const ipcBuffer = buildArrowIpcFromRows(filtered);
+    self.postMessage({ type: 'VIEWPORT_DATA', payload: ipcBuffer }, ipcBuffer ? [ipcBuffer.buffer] : []);
   }
   if (type === 'STATS') {
     const { data, filters } = payload;

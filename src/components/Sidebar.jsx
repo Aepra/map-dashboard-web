@@ -1,4 +1,10 @@
 import React from 'react';
+import LogoIcon from '../assets/images/LogoColor.png';
+import registrasiIcon from '../assets/icons/registrasi_icon.png';
+import demografiIcon from '../assets/icons/demografi_icon.png';
+import geospatialIcon from '../assets/icons/geospatial_icon.png';
+import berkebIcon from '../assets/icons/berkebutuhankhusus_icon.png';
+import sergraIcon from '../assets/icons/seragamgratis_icon.png';
 
 /**
  * Global Navigation Sidebar
@@ -17,10 +23,11 @@ const Sidebar = ({
       {/* Header/Logo */}
       <div className="px-4 py-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-md flex items-center justify-center text-white font-bold" style={{ backgroundColor: 'rgb(182, 32, 37)' }}>SP</div>
+          <img src={LogoIcon} alt="Logo" className="w-10 h-10" />
           <div>
             <div className="text-sm font-semibold">Dashboard Monitoring</div>
-            <div className="text-xs text-gray-500">SPMB Disdik Makassar</div>
+            <div className="text-sm font-semibold">SPMB Disdik Makassar</div>
+            <div className="text-xs text-gray-500">2025</div>
           </div>
         </div>
       </div>
@@ -32,6 +39,7 @@ const Sidebar = ({
           className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${activePage === 'registrasi' ? 'text-white' : 'text-gray-700 hover:bg-gray-50'}`}
           style={activePage === 'registrasi' ? activeButtonStyle : {}}
         >
+          <img src={registrasiIcon} alt="Registrasi" className="w-5 h-5" />
           <span className="ml-1">Registrasi</span>
         </button>
 
@@ -40,6 +48,7 @@ const Sidebar = ({
           className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${activePage === 'demografi' ? 'text-white' : 'text-gray-700 hover:bg-gray-50'}`}
           style={activePage === 'demografi' ? activeButtonStyle : {}}
         >
+          <img src={demografiIcon} alt="Demografi" className="w-5 h-5" />
           <span className="ml-1">Demografi</span>
         </button>
 
@@ -48,6 +57,7 @@ const Sidebar = ({
           className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${activePage === 'geospatial' ? 'text-white' : 'text-gray-700 hover:bg-gray-50'}`}
           style={activePage === 'geospatial' ? activeButtonStyle : {}}
         >
+          <img src={geospatialIcon} alt="Geospatial" className="w-5 h-5" />
           <span className="ml-1">Geospatial</span>
         </button>
 
@@ -56,6 +66,7 @@ const Sidebar = ({
           className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${activePage === 'kebutuhan' ? 'text-white' : 'text-gray-700 hover:bg-gray-50'}`}
           style={activePage === 'kebutuhan' ? activeButtonStyle : {}}
         >
+          <img src={berkebIcon} alt="Berkebutuhan Khusus" className="w-5 h-5" />
           <span className="ml-1">Berkebutuhan Khusus</span>
         </button>
 
@@ -64,6 +75,7 @@ const Sidebar = ({
           className={`flex items-center gap-3 px-3 py-2.5 rounded-md ${activePage === 'seragam' ? 'text-white' : 'text-gray-700 hover:bg-gray-50'}`}
           style={activePage === 'seragam' ? activeButtonStyle : {}}
         >
+          <img src={sergraIcon} alt="Seragam Gratis" className="w-5 h-5" />
           <span className="ml-1">Seragam Gratis</span>
         </button>
       </nav>

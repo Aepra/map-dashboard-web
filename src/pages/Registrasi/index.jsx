@@ -23,12 +23,11 @@ export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
     >
       <DashboardHeader title="Dashboard Registrasi SPMB 2025" onRestart={onRestart} />
 
-      {/* Scroll container (scrollbar kiri) */}
+      {/* Scroll container */}
       <div
         style={{
           flexGrow: 1,
           overflowY: 'auto',
-          direction: 'rtl',
           position: 'relative'
         }}
       >
@@ -39,10 +38,9 @@ export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
             fullScreen={false}
           />
         )}
-        {/* Balikin konten ke normal */}
+        {/* Konten */}
         <div
           style={{
-            direction: 'ltr',
             minHeight: '100%'
           }}
         >

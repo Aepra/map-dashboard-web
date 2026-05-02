@@ -80,6 +80,7 @@ export async function initDuckDB() {
     const jenjangCol = findCol(['jenjang', 'grade', 'level']);
     const namaSekolahCol = findCol(['nama_sekolah_tujuan', 'nama_sekolah', 'school_name', 'sekolah']);
     const statusCol = findCol(['status_penerimaan', 'status', 'hasil', 'status_keputusan']);
+    const statusVerifikasiCol = findCol(['status_verifikasi', 'verifikasi', 'status_v', 'verification_status']);
     const kecamatanCol = findCol(['kecamatan', 'kec']);
     const desaCol = findCol(['desa', 'kelurahan', 'kel']);
     const jarakCol = findCol(['jarak', 'jarak_meter', 'distance', 'jarak_m']);
@@ -102,7 +103,7 @@ export async function initDuckDB() {
     const cleanNumberExpr = (columnName) => `CASE WHEN UPPER(TRIM(CAST("${columnName}" AS VARCHAR))) IN ('NA', 'N/A', 'NULL', '-') OR TRIM(CAST("${columnName}" AS VARCHAR)) = '' THEN NULL ELSE CAST("${columnName}" AS DOUBLE) END`;
 
     // Build select clause using detected column names and alias to standard fields used in app
-    let selectClause = `CAST("${latCol}" AS DOUBLE) as lintang, CAST("${lonCol}" AS DOUBLE) as bujur, ${jenjangCol ? cleanTextExpr(jenjangCol) : 'CAST(NULL AS VARCHAR)'} as jenjang, ${cleanTextExpr(namaSekolahCol)} as nama_sekolah_tujuan, ${statusCol ? cleanTextExpr(statusCol) : 'CAST(NULL AS VARCHAR)'} as status_penerimaan`;
+    let selectClause = `CAST("${latCol}" AS DOUBLE) as lintang, CAST("${lonCol}" AS DOUBLE) as bujur, ${jenjangCol ? cleanTextExpr(jenjangCol) : 'CAST(NULL AS VARCHAR)'} as jenjang, ${cleanTextExpr(namaSekolahCol)} as nama_sekolah_tujuan, ${statusCol ? cleanTextExpr(statusCol) : 'CAST(NULL AS VARCHAR)'} as status_penerimaan, ${statusVerifikasiCol ? cleanTextExpr(statusVerifikasiCol) : 'CAST(NULL AS VARCHAR)'} as status_verifikasi`;
     if (kecamatanCol) selectClause += `,${cleanTextExpr(kecamatanCol)} as kecamatan`;
     else selectClause += `,CAST(NULL AS VARCHAR) as kecamatan`;
     if (desaCol) selectClause += `,${cleanTextExpr(desaCol)} as desa`;

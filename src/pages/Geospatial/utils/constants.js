@@ -1,17 +1,31 @@
 /**
  * Konfigurasi DuckDB dan Data Source
+ * 
+ * Deployment Types:
+ * - vercel: Data tersedia di /data/peta_murid.parquet (include di repo)
+ * - self: Data download dari URL eksternal saat runtime
  */
 export const DUCKDB_CONFIG = {
   mainModule: 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/dist/duckdb-mvp.wasm',
   mainWorker: '/duckdb-browser-mvp.worker.js',
 };
 
-// Parquet URL - bisa dari GitHub atau local
-// Local path (jika sudah di-download & disimpan di public/data/)
-export const PARQUET_URL = '/data/peta_murid.parquet';
+// Deployment type (vercel or self)
+const DEPLOY_TYPE = import.meta.env.VITE_DEPLOY_TYPE || 'vercel';
 
-// Original GitHub URL (untuk reference/backup)
-export const PARQUET_URL_GITHUB = 'https://raw.githubusercontent.com/Aepra/map-data-pipeline/main/data/peta_murid.parquet';
+// Parquet URLs - pilih berdasarkan deployment type
+const LOCAL_PARQUET_URL = '/data/peta_murid.parquet';
+const GITHUB_PARQUET_URL = import.meta.env.VITE_DATA_SOURCE_URL || 'https://raw.githubusercontent.com/Aepra/map-data-pipeline/main/data/peta_murid.parquet';
+
+// URL yang digunakan sesuai deployment type
+// vercel: gunakan local (data include di repo)
+// self: gunakan GitHub (data download saat runtime)
+export const PARQUET_URL = DEPLOY_TYPE === 'self' ? GITHUB_PARQUET_URL : LOCAL_PARQUET_URL;
+
+// Backup URLs untuk fallback
+export const PARQUET_URL_GITHUB = GITHUB_PARQUET_URL;
+export const PARQUET_URL_LOCAL = LOCAL_PARQUET_URL;
+export const DEPLOYMENT_TYPE = DEPLOY_TYPE;
 
 /**
  * Default View State (Makassar center)
@@ -20,7 +34,7 @@ export const DEFAULT_VIEW_STATE = {
   // Centered on Makassar city for a closer default view
   longitude: 119.4327,
   latitude: -5.1477,
-  zoom: 20,
+  zoom: 21,
   pitch: 0,
   bearing: 0,
 };
@@ -30,7 +44,7 @@ export const DEFAULT_VIEW_STATE = {
  */
 export const LAYER_CONFIG = {
   minZoom: 3,
-  maxZoom: 20,
+  maxZoom: 22,
   // Zoom-based rendering levels (Level of Detail)
   zoomLevels: {
     // Level 0: Very far (zoom < 8) - Show aggregated clusters

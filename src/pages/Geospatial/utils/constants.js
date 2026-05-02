@@ -20,7 +20,7 @@ export const DEFAULT_VIEW_STATE = {
   // Centered on Makassar city for a closer default view
   longitude: 119.4327,
   latitude: -5.1477,
-  zoom: 11,
+  zoom: 14,
   pitch: 0,
   bearing: 0,
 };

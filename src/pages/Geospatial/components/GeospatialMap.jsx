@@ -36,6 +36,15 @@ const labelStyle = {
   letterSpacing: '0.5px',
 };
 
+const missingValueLabels = new Set(['', 'na', 'n/a', 'null', '-']);
+
+const getDisplayValue = (value) => {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  if (!text || missingValueLabels.has(text.toLowerCase())) return null;
+  return text;
+};
+
 const GeospatialMap = () => {
   const [currentZoom, setCurrentZoom] = useState(DEFAULT_VIEW_STATE.zoom);
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -94,6 +103,12 @@ const GeospatialMap = () => {
   // Aggregate schools from filtered student data
   const schoolData = useSchoolData(filteredData);
 
+  const activeSchoolName = getDisplayValue(selectedStudent?.nama_sekolah_tujuan) || getDisplayValue(selectedSchool);
+  const visibleStudentData = selectedStudent ? [selectedStudent] : filteredData;
+  const visibleSchoolData = selectedStudent
+    ? schoolData.filter((school) => school.nama === activeSchoolName)
+    : schoolData;
+
   // Calculate metrics for filter labels (use memoized empty filters to keep stable reference)
   const metricsFilterStub = useMemo(() => ({ checkedJenjang: {}, checkedStatus: {}, checkedJalur: {} }), []);
   const metrics = useFilterMetrics(data, metricsFilterStub);
@@ -108,15 +123,19 @@ const GeospatialMap = () => {
     // If hovering over student layer — show compact, non-sensitive summary
     if (hovered.layer?.id === 'pendaftar-layer') {
       const coords = object && object.lintang && object.bujur ? `${Number(object.lintang).toFixed(4)}, ${Number(object.bujur).toFixed(4)}` : '';
+      const schoolName = getDisplayValue(object.nama_sekolah_tujuan) || 'Sekolah';
+      const jenjang = getDisplayValue(object.jenjang) || '-';
+      const jalur = getDisplayValue(object.jalur) || '-';
+      const status = getDisplayValue(object.status_penerimaan) || '-';
       return {
         x: hovered.x,
         y: hovered.y,
         html: `
           <div style="padding: 8px; font-size: 12px; color: #111827; max-width: 300px; border-radius: 8px; background: rgba(255,255,255,0.96); box-shadow: 0 4px 20px rgba(2,6,23,0.12);">
-            <div style="font-weight:700; margin-bottom:6px;">${object.nama_sekolah_tujuan || 'Sekolah: N/A'}</div>
-            <div style="font-size:12px; color:#374151">Jenjang: <strong style="color:#111827">${object.jenjang || 'N/A'}</strong></div>
-            <div style="font-size:12px; color:#374151">Jalur: <strong style="color:#111827">${object.jalur || 'N/A'}</strong></div>
-            <div style="font-size:12px; color:#374151">Status: <strong style="color:${object.status_penerimaan === 'Diterima' ? '#047857' : object.status_penerimaan === 'Cadangan' ? '#B45309' : '#B91C1C'}">${object.status_penerimaan || 'N/A'}</strong></div>
+            <div style="font-weight:700; margin-bottom:6px;">${schoolName}</div>
+            <div style="font-size:12px; color:#374151">Jenjang: <strong style="color:#111827">${jenjang}</strong></div>
+            <div style="font-size:12px; color:#374151">Jalur: <strong style="color:#111827">${jalur}</strong></div>
+            <div style="font-size:12px; color:#374151">Status: <strong style="color:${status === 'Diterima' ? '#047857' : status === 'Cadangan' ? '#B45309' : '#B91C1C'}">${status}</strong></div>
             ${coords ? `<div style="margin-top:6px;font-size:11px;color:#6b7280">Koordinat: ${coords}</div>` : ''}
           </div>
         `,
@@ -171,29 +190,29 @@ const GeospatialMap = () => {
     const layerList = [];
 
     // Add student layer
-    if (filteredData.length > 0) {
+    if (visibleStudentData.length > 0) {
       layerList.push(
-        createStudentLayer(filteredData, currentZoom, vizMode, handleSelectStudent)
+        createStudentLayer(visibleStudentData, currentZoom, vizMode, handleSelectStudent)
       );
     }
 
     // Add school layer
-    if (schoolData.length > 0) {
+    if (visibleSchoolData.length > 0) {
       layerList.push(
-        createSchoolLayer(schoolData, currentZoom, handleSelectSchool)
+        createSchoolLayer(visibleSchoolData, currentZoom, handleSelectSchool)
       );
     }
 
     // Add line layer if student selected
-    if (selectedStudent && schoolData.length > 0) {
-      const lineLayer = createLineLayer(selectedStudent, schoolData, currentZoom);
+    if (selectedStudent && visibleSchoolData.length > 0) {
+      const lineLayer = createLineLayer(selectedStudent, visibleSchoolData, currentZoom);
       if (lineLayer) layerList.push(lineLayer);
     }
 
     return layerList;
-  }, [filteredData, schoolData, currentZoom, vizMode, selectedStudent, handleSelectStudent, handleSelectSchool]);
+  }, [visibleStudentData, visibleSchoolData, currentZoom, vizMode, selectedStudent, handleSelectStudent, handleSelectSchool]);
 
-  // Minimalist top filter bar - single row
+          {(selectedStudent ? visibleStudentData.length : filteredData.length).toLocaleString('id-ID')}
   const topBar = (
     <div style={{
       display: 'flex',
@@ -358,8 +377,8 @@ const GeospatialMap = () => {
         <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 100 }}>
           <InfoPanel
             selectedStudent={null}
-            selectedSchool={selectedSchool}
-            schoolData={schoolData}
+            selectedSchool={activeSchoolName}
+            schoolData={visibleSchoolData.length > 0 ? visibleSchoolData : schoolData}
             onClose={() => setSelectedSchool(null)}
           />
         </div>

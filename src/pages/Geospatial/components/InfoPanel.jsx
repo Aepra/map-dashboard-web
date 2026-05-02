@@ -1,6 +1,22 @@
 /**
  * Info Panel - Display selected student or school details
  */
+const missingValueLabels = new Set(['', 'na', 'n/a', 'null', '-']);
+
+const getDisplayValue = (value) => {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  if (!text || missingValueLabels.has(text.toLowerCase())) return null;
+  return text;
+};
+
+const getDisplayCoordinate = (latitude, longitude) => {
+  const lat = Number(latitude);
+  const lon = Number(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+};
+
 export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], onClose }) => {
   // If no student selected but a school name is provided, show school details
   if (!selectedStudent && selectedSchool) {
@@ -82,28 +98,30 @@ export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], on
       <div className="space-y-1.5 text-[12px]">
         <div>
           <span className="text-gray-600">ID Peserta:</span>
-          <div className="font-semibold text-gray-800">{selectedStudent.id_peserta || 'N/A'}</div>
+          <div className="font-semibold text-gray-800">{getDisplayValue(selectedStudent.id_peserta) || '-'}</div>
         </div>
         <div>
           <span className="text-gray-600">Kecamatan:</span>
-          <div className="font-semibold text-gray-800">{selectedStudent.kecamatan || 'N/A'}</div>
+          <div className="font-semibold text-gray-800">{getDisplayValue(selectedStudent.kecamatan) || '-'}</div>
         </div>
         
         <div>
           <span className="text-gray-600">Desa:</span>
-          <div className="font-semibold text-gray-800">{selectedStudent.desa || 'N/A'}</div>
+          <div className="font-semibold text-gray-800">{getDisplayValue(selectedStudent.desa) || '-'}</div>
         </div>
         <div>
           <span className="text-gray-600">Sekolah Tujuan:</span>
-          <div className="font-semibold text-gray-800">{selectedStudent.nama_sekolah_tujuan || 'N/A'}</div>
+          <div className="font-semibold text-gray-800">{getDisplayValue(selectedStudent.nama_sekolah_tujuan) || '-'}</div>
         </div>
         <div>
           <span className="text-gray-600">Jarak:</span>
-          <div className="font-semibold text-gray-800">{selectedStudent.jarak || 'N/A'}</div>
+          <div className="font-semibold text-gray-800">
+            {getDisplayValue(selectedStudent.jarak) || '-'}
+          </div>
         </div>
         <div>
           <span className="text-gray-600">Jenjang:</span>
-          <div className="font-semibold text-gray-800">{selectedStudent.jenjang || 'N/A'}</div>
+          <div className="font-semibold text-gray-800">{getDisplayValue(selectedStudent.jenjang) || '-'}</div>
         </div>
         <div>
           <span className="text-gray-600">Status:</span>
@@ -114,20 +132,20 @@ export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], on
               ? 'text-orange-700'
               : 'text-red-700'
           }`}>
-            {selectedStudent.status_penerimaan || 'N/A'}
+            {getDisplayValue(selectedStudent.status_penerimaan) || '-'}
           </div>
         </div>
         <div>
           <span className="text-gray-600">Jalur:</span>
-          <div className="font-semibold text-gray-800">{selectedStudent.jalur || 'N/A'}</div>
+          <div className="font-semibold text-gray-800">{getDisplayValue(selectedStudent.jalur) || '-'}</div>
         </div>
         <div>
           <span className="text-gray-600">Koordinat:</span>
-          <div className="font-semibold text-gray-800">{selectedStudent.lintang && selectedStudent.bujur ? `${Number(selectedStudent.lintang).toFixed(5)}, ${Number(selectedStudent.bujur).toFixed(5)}` : 'N/A'}</div>
+          <div className="font-semibold text-gray-800">{getDisplayCoordinate(selectedStudent.lintang, selectedStudent.bujur) || '-'}</div>
         </div>
         {selectedStudent.id_peserta && (
           <div className="text-gray-500 text-[11px] mt-2 pt-2 border-t border-gray-200">
-            ID: {selectedStudent.id_peserta}
+            ID: {getDisplayValue(selectedStudent.id_peserta)}
           </div>
         )}
       </div>

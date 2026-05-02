@@ -80,6 +80,9 @@ export async function initDuckDB() {
     const jenjangCol = findCol(['jenjang', 'grade', 'level']);
     const namaSekolahCol = findCol(['nama_sekolah_tujuan', 'nama_sekolah', 'school_name', 'sekolah']);
     const statusCol = findCol(['status_penerimaan', 'status', 'hasil', 'status_keputusan']);
+    const kecamatanCol = findCol(['kecamatan', 'kec']);
+    const desaCol = findCol(['desa', 'kelurahan', 'kel']);
+    const jarakCol = findCol(['jarak', 'jarak_meter', 'distance', 'jarak_m']);
 
     // ID and jalur detection (existing logic expanded)
     if (!globalCache.idColumn) {
@@ -95,17 +98,26 @@ export async function initDuckDB() {
       throw new Error(`Parquet schema missing required columns. Found: ${availableColumns.join(', ')}. Expected lat/lon and school name (e.g. lintang/bujur, nama_sekolah_tujuan).`);
     }
 
+    const cleanTextExpr = (columnName) => `CASE WHEN UPPER(TRIM(CAST("${columnName}" AS VARCHAR))) IN ('NA', 'N/A', 'NULL', '-') OR TRIM(CAST("${columnName}" AS VARCHAR)) = '' THEN NULL ELSE CAST("${columnName}" AS VARCHAR) END`;
+    const cleanNumberExpr = (columnName) => `CASE WHEN UPPER(TRIM(CAST("${columnName}" AS VARCHAR))) IN ('NA', 'N/A', 'NULL', '-') OR TRIM(CAST("${columnName}" AS VARCHAR)) = '' THEN NULL ELSE CAST("${columnName}" AS DOUBLE) END`;
+
     // Build select clause using detected column names and alias to standard fields used in app
-    let selectClause = `CAST("${latCol}" AS DOUBLE) as lintang, CAST("${lonCol}" AS DOUBLE) as bujur, CAST("${jenjangCol || 'NULL'}" AS VARCHAR) as jenjang, CAST("${namaSekolahCol}" AS VARCHAR) as nama_sekolah_tujuan, CAST("${statusCol || 'NULL'}" AS VARCHAR) as status_penerimaan`;
+    let selectClause = `CAST("${latCol}" AS DOUBLE) as lintang, CAST("${lonCol}" AS DOUBLE) as bujur, ${jenjangCol ? cleanTextExpr(jenjangCol) : 'CAST(NULL AS VARCHAR)'} as jenjang, ${cleanTextExpr(namaSekolahCol)} as nama_sekolah_tujuan, ${statusCol ? cleanTextExpr(statusCol) : 'CAST(NULL AS VARCHAR)'} as status_penerimaan`;
+    if (kecamatanCol) selectClause += `,${cleanTextExpr(kecamatanCol)} as kecamatan`;
+    else selectClause += `,CAST(NULL AS VARCHAR) as kecamatan`;
+    if (desaCol) selectClause += `,${cleanTextExpr(desaCol)} as desa`;
+    else selectClause += `,CAST(NULL AS VARCHAR) as desa`;
     if (schoolLatCol) selectClause += `,CAST("${schoolLatCol}" AS DOUBLE) as lintang_sekolah`;
     else selectClause += `,CAST(NULL AS DOUBLE) as lintang_sekolah`;
     if (schoolLonCol) selectClause += `,CAST("${schoolLonCol}" AS DOUBLE) as bujur_sekolah`;
     else selectClause += `,CAST(NULL AS DOUBLE) as bujur_sekolah`;
     selectClause += `,CAST(NULL AS VARCHAR) as koordinat_sekolah`;
     selectClause += `,CAST(NULL AS VARCHAR) as koordinat_peserta`;
-    selectClause += `,CAST(NULL AS DOUBLE) as jarak_meter`;
-    if (globalCache.idColumn) selectClause += `,CAST("${globalCache.idColumn}" AS VARCHAR) as id_peserta`;
-    if (globalCache.jalurColumn) selectClause += `,CAST("${globalCache.jalurColumn}" AS VARCHAR) as jalur`;
+    if (jarakCol) selectClause += `,${cleanNumberExpr(jarakCol)} as jarak`;
+    else selectClause += `,CAST(NULL AS DOUBLE) as jarak`;
+    if (globalCache.idColumn) selectClause += `,${cleanTextExpr(globalCache.idColumn)} as id_peserta`;
+    else selectClause += `,CAST(NULL AS VARCHAR) as id_peserta`;
+    if (globalCache.jalurColumn) selectClause += `,${cleanTextExpr(globalCache.jalurColumn)} as jalur`;
     else selectClause += `,CAST(NULL AS VARCHAR) as jalur`;
     const query = `SELECT ${selectClause} FROM '${activeParquetAlias}'`;
     const resultAll = await globalCache.conn.query(query);

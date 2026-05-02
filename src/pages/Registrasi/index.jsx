@@ -1,6 +1,15 @@
 import React from 'react';
+import DashboardHeader from '../../components/DashboardHeader';
+import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
+import { useEffect, useState } from 'react';
 
-export const Registrasi = () => {
+export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
+  const [iframeLoading, setIframeLoading] = useState(true);
+
+  useEffect(() => {
+    setIframeLoading(true);
+  }, [restartKey]);
+
   return (
     <div
       style={{
@@ -12,34 +21,24 @@ export const Registrasi = () => {
         background: '#f9fafb'
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          padding: '12px 16px',
-          background: '#ffffff',
-          borderBottom: '1px solid #e5e7eb'
-        }}
-      >
-        <h1
-          style={{
-            fontSize: '18px',
-            fontWeight: 600,
-            color: '#1f2937',
-            margin: 0
-          }}
-        >
-          Dashboard Registrasi SPMB 2025
-        </h1>
-      </div>
+      <DashboardHeader title="Dashboard Registrasi SPMB 2025" onRestart={onRestart} />
 
       {/* Scroll container (scrollbar kiri) */}
       <div
         style={{
           flexGrow: 1,
           overflowY: 'auto',
-          direction: 'rtl'
+          direction: 'rtl',
+          position: 'relative'
         }}
       >
+        {iframeLoading && (
+          <DashboardLoadingOverlay
+            title="Memuat Dashboard Registrasi"
+            message="Sedang menyiapkan tampilan registrasi..."
+            fullScreen={false}
+          />
+        )}
         {/* Balikin konten ke normal */}
         <div
           style={{
@@ -48,13 +47,15 @@ export const Registrasi = () => {
           }}
         >
           <iframe
+            key={restartKey}
             src="https://datastudio.google.com/embed/reporting/6481b956-06ca-410a-ae4e-ed8d373cc994/page/p_51xqv9f82d?nav=hidden"
             frameBorder="0"
             allowFullScreen
+            onLoad={() => setIframeLoading(false)}
             sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
             style={{
               width: '100%',
-              height: '200vh', // bikin bisa discroll
+              height: '200vh',
               border: 'none',
               display: 'block'
             }}

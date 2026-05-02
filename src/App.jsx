@@ -18,10 +18,24 @@ const PAGE_KEYS = [
 
 function App() {
   const [activePage, setActivePage] = useState('registrasi');
+  const [restartTokens, setRestartTokens] = useState({
+    registrasi: 0,
+    demografi: 0,
+    geospatial: 0,
+    kebutuhan: 0,
+    seragam: 0,
+  });
 
   // Navigation handler for sidebar
   const handleNavigate = (pageKey) => {
     setActivePage(pageKey);
+  };
+
+  const handleRestartPage = (pageKey) => {
+    setRestartTokens((currentTokens) => ({
+      ...currentTokens,
+      [pageKey]: currentTokens[pageKey] + 1,
+    }));
   };
 
   return (
@@ -33,19 +47,19 @@ function App() {
       <div className="flex-1 relative bg-white overflow-auto">
         {/* Render all pages, only show the active one */}
         <div style={{ display: activePage === 'registrasi' ? 'block' : 'none', height: '100%' }}>
-          <Registrasi />
+          <Registrasi restartKey={restartTokens.registrasi} onRestart={() => handleRestartPage('registrasi')} />
         </div>
         <div style={{ display: activePage === 'demografi' ? 'block' : 'none', height: '100%' }}>
-          <Demografi />
+          <Demografi restartKey={restartTokens.demografi} onRestart={() => handleRestartPage('demografi')} />
         </div>
         <div style={{ display: activePage === 'geospatial' ? 'block' : 'none', height: '100%' }}>
-          <Geospatial />
+          <Geospatial restartKey={restartTokens.geospatial} onRestart={() => handleRestartPage('geospatial')} />
         </div>
         <div style={{ display: activePage === 'kebutuhan' ? 'block' : 'none', height: '100%' }}>
-          <BerkebutuhanKhusus />
+          <BerkebutuhanKhusus restartKey={restartTokens.kebutuhan} onRestart={() => handleRestartPage('kebutuhan')} />
         </div>
         <div style={{ display: activePage === 'seragam' ? 'block' : 'none', height: '100%' }}>
-          <SeragamGratis />
+          <SeragamGratis restartKey={restartTokens.seragam} onRestart={() => handleRestartPage('seragam')} />
         </div>
       </div>
     </div>

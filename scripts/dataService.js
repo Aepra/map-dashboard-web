@@ -21,6 +21,25 @@ const GITHUB_URL = 'https://raw.githubusercontent.com/Aepra/map-data-pipeline/ma
 const OUTPUT_PATH = path.join(__dirname, '../public/data/peta_murid.parquet');
 const LOG_FILE = path.join(__dirname, '../public/data/download.log');
 
+const isValidParquetFile = (filePath) => {
+  try {
+    if (!fs.existsSync(filePath)) return false;
+    const stats = fs.statSync(filePath);
+    if (stats.size < 8) return false;
+
+    const fd = fs.openSync(filePath, 'r');
+    const header = Buffer.alloc(4);
+    const footer = Buffer.alloc(4);
+    fs.readSync(fd, header, 0, 4, 0);
+    fs.readSync(fd, footer, 0, 4, stats.size - 4);
+    fs.closeSync(fd);
+
+    return header.toString('utf8') === 'PAR1' && footer.toString('utf8') === 'PAR1';
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Utility untuk mencatat waktu download
  */
@@ -80,15 +99,20 @@ const startService = () => {
   logDownload('⏰ Schedule: Every 1 hour (at minute 0)');
   logDownload('---');
 
-  // Download immediately on startup
-  console.log('\n📥 Downloading initial data...');
-  downloadFile()
-    .then((size) => {
-      console.log(`✅ Initial download complete (${size} MB)\n`);
-    })
-    .catch((err) => {
-      logDownload(`❌ Initial download failed: ${err.message}`);
-    });
+  // Download immediately on startup only when cache is missing
+  if (isValidParquetFile(OUTPUT_PATH)) {
+    logDownload('✅ Existing parquet cache valid, skipping initial download');
+  } else {
+    logDownload('⚠️ Existing parquet cache missing/corrupt, downloading fresh file');
+    console.log('\n📥 Downloading initial data...');
+    downloadFile()
+      .then((size) => {
+        console.log(`✅ Initial download complete (${size} MB)\n`);
+      })
+      .catch((err) => {
+        logDownload(`❌ Initial download failed: ${err.message}`);
+      });
+  }
 
   // Schedule untuk setiap 1 jam (jam 0, menit 0)
   // "0 * * * *" = every hour

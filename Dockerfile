@@ -20,5 +20,5 @@ EXPOSE 5173
 # Environment
 ENV NODE_ENV=development
 
-# Start Vite dev server with host 0.0.0.0 for Docker access
-CMD ["npm", "run", "dev:vite", "--", "--host", "0.0.0.0"]
+# Start complete startup process (download data + service + dev server)
+CMD ["npm", "run", "dev"]

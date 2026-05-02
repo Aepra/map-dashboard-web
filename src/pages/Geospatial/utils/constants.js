@@ -17,19 +17,31 @@ export const PARQUET_URL_GITHUB = 'https://raw.githubusercontent.com/Aepra/map-d
  * Default View State (Makassar center)
  */
 export const DEFAULT_VIEW_STATE = {
-  longitude: 118.5,
-  latitude: -2.5,
-  zoom: 4.8,
+  // Centered on Makassar city for a closer default view
+  longitude: 119.4327,
+  latitude: -5.1477,
+  zoom: 11,
   pitch: 0,
   bearing: 0,
 };
 
 /**
- * Layer Configuration
+ * Layer Configuration - Optimized for smooth zoom with adaptive radius
  */
 export const LAYER_CONFIG = {
-  minZoom: 8,
-  maxZoom: 15,
+  minZoom: 3,
+  maxZoom: 20,
+  // Zoom-based rendering levels (Level of Detail)
+  zoomLevels: {
+    // Level 0: Very far (zoom < 8) - Show aggregated clusters
+    veryFar: { zoom: [3, 8], radius: [0.8, 2.0], opacity: [0.5, 0.6], pickable: false },
+    // Level 1: Far (8 <= zoom < 11) - Small dots
+    far: { zoom: [8, 11], radius: [1.5, 3.5], opacity: [0.6, 0.65], pickable: true },
+    // Level 2: Medium (11 <= zoom < 14) - Medium dots
+    medium: { zoom: [11, 14], radius: [3.5, 7], opacity: [0.65, 0.75], pickable: true },
+    // Level 3: Close (zoom >= 14) - Large, detailed dots
+    close: { zoom: [14, 20], radius: [6.5, 13], opacity: [0.75, 0.85], pickable: true },
+  },
   normal: {
     minRadius: 2,
     maxRadius: 8,
@@ -98,4 +110,4 @@ export const SMP_COLORS = [
 /**
  * Map Style
  */
-export const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+export const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';

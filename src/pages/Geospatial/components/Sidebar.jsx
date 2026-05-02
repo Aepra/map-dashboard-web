@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { getSchoolColorRGB } from './schoolColors';
+import { getSchoolColorRGB } from '../utils/schoolColors';
 
 /**
  * Sidebar - School list with search

@@ -1,5 +1,5 @@
 import { IconLayer, ScatterplotLayer, LineLayer } from '@deck.gl/layers';
-import { LAYER_CONFIG, COLORS } from './constants';
+import { LAYER_CONFIG, COLORS } from '../utils/constants';
 
 /**
  * Factory function untuk membuat ScatterplotLayer
@@ -103,15 +103,59 @@ const getSdColor = (schoolName) => {
 };
 
 export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent) => {
-  const config = vizMode === 'dense' ? LAYER_CONFIG.dense : LAYER_CONFIG.normal;
+  // Determine zoom level and config
+  const zoomLevels = LAYER_CONFIG.zoomLevels;
+  let zoomLevel = zoomLevels.veryFar;
+  let isDetailedView = true;
 
-  const getRadius = () => {
-    const minZoom = LAYER_CONFIG.minZoom;
-    const maxZoom = LAYER_CONFIG.maxZoom;
-    const minRadius = config.minRadius;
-    const maxRadius = config.maxRadius;
-    const zoomClamped = Math.max(minZoom, Math.min(maxZoom, zoom));
-    return minRadius + ((zoomClamped - minZoom) / (maxZoom - minZoom)) * (maxRadius - minRadius);
+  if (zoom >= 14) {
+    zoomLevel = zoomLevels.close;
+  } else if (zoom >= 11) {
+    zoomLevel = zoomLevels.medium;
+  } else if (zoom >= 8) {
+    zoomLevel = zoomLevels.far;
+  } else {
+    // Very far zoom - might want to show aggregated points
+    zoomLevel = zoomLevels.veryFar;
+    isDetailedView = false;
+  }
+
+  // Apply viz mode adjustments
+  const baseDensityMultiplier = vizMode === 'dense' ? 0.5 : 1.0;
+  const opacityAdjustment = vizMode === 'dense' ? 0.6 : 1.0;
+
+  const getRadius = (d) => {
+    // Smooth interpolation based on zoom
+    const [zoomMin, zoomMax] = zoomLevel.zoom;
+    const [radiusMin, radiusMax] = zoomLevel.radius;
+
+    // Clamp zoom to level's range
+    const zoomNorm = Math.max(0, Math.min(1, (zoom - zoomMin) / (zoomMax - zoomMin)));
+
+    // Smooth easing: ease-in-out for more natural feel
+    const eased = zoomNorm < 0.5
+      ? 2 * zoomNorm * zoomNorm
+      : -1 + (4 - 2 * zoomNorm) * zoomNorm;
+
+    const baseRadius = radiusMin + eased * (radiusMax - radiusMin);
+
+    // Slight random variation so dots don't look uniform (more organic)
+    const variation = (hashString(d.id_peserta || '') % 20 - 10) / 100;
+    return Math.max(0.5, baseRadius * (1 + variation * 0.1)) * baseDensityMultiplier;
+  };
+
+  // Opacity curve: more opaque when closer, transparent when far
+  const getOpacity = () => {
+    const [zoomMin, zoomMax] = zoomLevel.zoom;
+    const [opacityMin, opacityMax] = zoomLevel.opacity;
+
+    if (zoom <= zoomMin) return opacityMin * opacityAdjustment;
+    if (zoom >= zoomMax) return opacityMax * opacityAdjustment;
+
+    const zoomNorm = (zoom - zoomMin) / (zoomMax - zoomMin);
+    // Smooth cubic easing
+    const eased = zoomNorm * zoomNorm * (3 - 2 * zoomNorm);
+    return (opacityMin + eased * (opacityMax - opacityMin)) * opacityAdjustment;
   };
 
   return new ScatterplotLayer({
@@ -125,23 +169,57 @@ export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent)
     },
     getRadius,
     radiusUnits: 'pixels',
-    pickable: true,
-    opacity: Math.min(config.opacity, 0.65),
-    stroked: false,
+    pickable: zoomLevel.pickable,
+    opacity: getOpacity(),
+    stroked: zoom >= 12, // Only show stroke when zoomed in
+    getLineColor: zoom >= 12 ? [255, 255, 255, 100] : [255, 255, 255, 0],
+    getLineWidth: zoom >= 12 ? 1 : 0,
     lineWidthMinPixels: 0,
+    antialiasing: true,
     onClick: ({ object }) => {
-      if (object && onSelectStudent) onSelectStudent(object);
+      if (object && onSelectStudent && zoomLevel.pickable) {
+        onSelectStudent(object);
+      }
     },
+    // Only update when zoom or data changes (not on every frame)
     updateTriggers: {
-      getRadius: [zoom],
+      getRadius: [zoom, vizMode],
+      getOpacity: [zoom, vizMode],
+      getLineColor: [zoom],
+      getLineWidth: [zoom],
+      pickable: [zoom],
     },
   });
 };
 
 export const createSchoolLayer = (schoolData, zoom, onSelectSchool) => {
+  // School layer visibility thresholds
+  const shouldShow = zoom >= 9.5; // Show schools earlier for better context
+  const isDetailedView = zoom >= 12;
+
+  const getSize = (d) => {
+    // Adaptive sizing based on zoom
+    if (zoom < 10) return 8; // Minimal size when far
+    if (zoom < 12) return 12; // Medium size
+    if (zoom < 14) return 16; // Larger when closer
+    return 20; // Full size when very close
+
+    // Alternative: logarithmic scale based on student count
+    // const base = zoom < 12 ? 10 : 16;
+    // const scale = Math.log2(Math.max(1, d.totalSiswa));
+    // return Math.max(8, Math.min(24, base + scale * 1.5));
+  };
+
+  const getOpacity = () => {
+    if (zoom < 9.5) return 0; // Hidden
+    if (zoom < 10) return 0.3 * ((zoom - 9.5) / 0.5); // Fade in
+    if (zoom < 12) return 0.3 + (0.5 * ((zoom - 10) / 2)); // Gradually increase
+    return 0.8; // Full opacity when close
+  };
+
   return new IconLayer({
     id: 'sekolah-layer',
-    data: schoolData,
+    data: shouldShow ? schoolData : [], // Empty array when hidden = no render cost
     getPosition: (d) => [d.bujur, d.lintang],
     getIcon: () => ({
       url: SCHOOL_ICON_URL,
@@ -149,35 +227,37 @@ export const createSchoolLayer = (schoolData, zoom, onSelectSchool) => {
       height: 96,
       anchorY: 90,
     }),
-    getSize: (d) => {
-      const base = 13;
-      const scale = Math.log2(Math.max(1, d.totalSiswa));
-      return base + Math.min(12, scale * 1.8);
-    },
+    getSize,
     sizeUnits: 'pixels',
     sizeScale: 1,
     getColor: () => [31, 41, 55],
-    opacity: 0.9,
-    pickable: true,
+    opacity: getOpacity(),
+    pickable: zoom >= 10, // Only clickable when visible
     wrapLongitude: false,
-    visible: zoom >= 10,
+    antialiasing: true,
     onClick: ({ object }) => {
-      if (object && onSelectSchool) onSelectSchool(object.nama);
+      if (object && onSelectSchool && zoom >= 10) {
+        onSelectSchool(object.nama);
+      }
+    },
+    updateTriggers: {
+      getSize: [zoom],
+      getOpacity: [zoom],
+      pickable: [zoom],
+      data: [shouldShow],
     },
   });
 };
 
-export const createLineLayer = (selectedStudent, schoolData) => {
+export const createLineLayer = (selectedStudent, schoolData, zoom = 0) => {
   if (!selectedStudent || !schoolData) return null;
 
-  // Find the school that matches the selected student's destination
   const destinationSchool = schoolData.find(
     (s) => s.nama === selectedStudent.nama_sekolah_tujuan
   );
 
   if (!destinationSchool) return null;
 
-  // Create line data connecting student to school
   const lineData = [
     {
       sourcePosition: [selectedStudent.bujur, selectedStudent.lintang],
@@ -185,15 +265,40 @@ export const createLineLayer = (selectedStudent, schoolData) => {
     },
   ];
 
+  // Adaptive line width based on zoom
+  const getLineWidth = () => {
+    if (zoom < 10) return 1;
+    if (zoom < 12) return 1.5;
+    if (zoom < 14) return 2;
+    return 2.5;
+  };
+
+  // Smooth opacity: more visible when zoomed in
+  const getOpacity = () => {
+    if (zoom < 10) return 0.5;
+    if (zoom < 12) return 0.65;
+    return 0.8;
+  };
+
+  // Gradient effect: fade at ends for smooth visual
+  const getStrokeStyle = () => {
+    return zoom >= 12 ? 'solid' : 'solid';
+  };
+
   return new LineLayer({
     id: 'student-to-school-line',
     data: lineData,
     getSourcePosition: (d) => d.sourcePosition,
     getTargetPosition: (d) => d.targetPosition,
-    getColor: () => [59, 130, 246], // Blue color RGB
-    getWidth: () => 2,
+    getColor: () => [59, 130, 246, 200], // Blue with transparency
+    getWidth: getLineWidth,
     widthUnits: 'pixels',
-    opacity: 0.8,
+    opacity: getOpacity(),
     pickable: false,
+    antialiasing: true,
+    updateTriggers: {
+      getWidth: [zoom],
+      getOpacity: [zoom],
+    },
   });
 };

@@ -1,22 +1,54 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import PetaMap from './components/PetaMap';
+
+import React, { useState } from 'react';
+import Sidebar from './components/Sidebar';
+import Registrasi from './pages/Registrasi';
+import Demografi from './pages/Demografi';
+import Geospatial from './pages/Geospatial';
+import BerkebutuhanKhusus from './pages/BerkebutuhanKhusus';
+import SeragamGratis from './pages/SeragamGratis';
+
+
+const PAGE_KEYS = [
+  'registrasi',
+  'demografi',
+  'geospatial',
+  'kebutuhan',
+  'seragam',
+];
 
 function App() {
-  return (
-    <Router>
-      <div className="flex h-screen w-screen bg-gray-900 overflow-hidden font-sans">
-        
-        {/* Left nav removed: replaced by in-map sidebar in PetaMap (per design) */}
+  const [activePage, setActivePage] = useState('registrasi');
 
-        
-        <div className="flex-1 relative bg-white">
-          <Routes>
-            <Route path="/" element={<PetaMap/>} />
-            <Route path="/grafik" element={<div className="flex h-full items-center justify-center text-gray-400">Halaman Grafik (Coming Soon)</div>} />
-          </Routes>
+  // Navigation handler for sidebar
+  const handleNavigate = (pageKey) => {
+    setActivePage(pageKey);
+  };
+
+  return (
+    <div className="flex h-screen w-screen bg-gray-900 overflow-hidden font-sans">
+      {/* Global Navigation Sidebar */}
+      <Sidebar activePage={activePage} onNavigate={handleNavigate} />
+
+      {/* Main Content Area */}
+      <div className="flex-1 relative bg-white overflow-auto">
+        {/* Render all pages, only show the active one */}
+        <div style={{ display: activePage === 'registrasi' ? 'block' : 'none', height: '100%' }}>
+          <Registrasi />
+        </div>
+        <div style={{ display: activePage === 'demografi' ? 'block' : 'none', height: '100%' }}>
+          <Demografi />
+        </div>
+        <div style={{ display: activePage === 'geospatial' ? 'block' : 'none', height: '100%' }}>
+          <Geospatial />
+        </div>
+        <div style={{ display: activePage === 'kebutuhan' ? 'block' : 'none', height: '100%' }}>
+          <BerkebutuhanKhusus />
+        </div>
+        <div style={{ display: activePage === 'seragam' ? 'block' : 'none', height: '100%' }}>
+          <SeragamGratis />
         </div>
       </div>
-    </Router>
+    </div>
   );
 }
 

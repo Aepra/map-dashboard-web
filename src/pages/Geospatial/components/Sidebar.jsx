@@ -75,7 +75,7 @@ export const Sidebar = ({
 							<div className="divide-y divide-gray-100">
 								{filteredSchools.map((school) => {
 									const isSelected = selectedSchool === school.nama;
-									const schoolColor = getSchoolColorRGB(school.nama);
+									const schoolColor = getSchoolColorRGB(school);
 
 									return (
 										<button
@@ -88,7 +88,7 @@ export const Sidebar = ({
 										>
 											<div className="flex items-start gap-3">
 												<div
-													className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+													className="w-3 h-3 rounded-full mt-1 shrink-0"
 													style={{ backgroundColor: schoolColor }}
 												/>
 												<div className="flex-1 min-w-0">

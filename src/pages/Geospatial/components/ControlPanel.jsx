@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 /**
  * Control Panel - Minimalist Filter UI
@@ -13,6 +13,7 @@ export const ControlPanel = ({
   totalCount,
 }) => {
   const [showJenjangDropdown, setShowJenjangDropdown] = useState(false);
+  const safeCheckedJenjang = checkedJenjang || {};
 
   const handleCheckboxChange = (jenjang) => {
     setCheckedJenjang((prev) => ({
@@ -21,8 +22,8 @@ export const ControlPanel = ({
     }));
   };
 
-  const getSelectedLabel = () => {
-    const selected = Object.entries(checkedJenjang)
+  const selectedLabel = useMemo(() => {
+    const selected = Object.entries(safeCheckedJenjang)
       .filter(([_, checked]) => checked)
       .map(([jenjang]) => jenjang);
 
@@ -30,31 +31,40 @@ export const ControlPanel = ({
     if (selected.length === 0) return 'Tidak ada';
     if (selected.length === 1) return selected[0];
     return selected.join(' + ');
-  };
+  }, [safeCheckedJenjang]);
 
   return (
     <div className="bg-white/95 rounded-lg shadow-lg backdrop-blur-sm w-80 border border-slate-200 overflow-hidden">
       {/* Header with compact layout */}
-      <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100">
+      <div className="px-4 py-3 border-b border-slate-200 bg-linear-to-r from-slate-50 to-slate-100">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold text-slate-700">Pilih Jenjang</div>
           <button
-            onClick={() => setShowJenjangDropdown(!showJenjangDropdown)}
+            onClick={() => setShowJenjangDropdown((current) => !current)}
             className="text-sm px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold transition border border-blue-200 hover:border-blue-300"
           >
-            {getSelectedLabel()} {showJenjangDropdown ? '▲' : '▼'}
+            {selectedLabel} {showJenjangDropdown ? '▲' : '▼'}
           </button>
         </div>
       </div>
 
       {/* Dropdown Menu */}
-      {showJenjangDropdown && (
-        <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 space-y-2.5">
+      <div
+        className="overflow-hidden border-b border-slate-200 bg-slate-50 transition-all duration-200 ease-out"
+        style={{
+          maxHeight: showJenjangDropdown ? '220px' : '0px',
+          opacity: showJenjangDropdown ? 1 : 0,
+          transform: showJenjangDropdown ? 'translateY(0)' : 'translateY(-4px)',
+          pointerEvents: showJenjangDropdown ? 'auto' : 'none',
+          willChange: 'max-height, opacity, transform',
+        }}
+      >
+        <div className="px-4 py-3 space-y-2.5">
           {['SD', 'SMP', 'PAUD'].map((jenjang) => (
             <label key={jenjang} className="flex items-center gap-3 cursor-pointer hover:bg-blue-50 p-2 rounded-md transition">
               <input
                 type="checkbox"
-                checked={checkedJenjang[jenjang]}
+                checked={!!safeCheckedJenjang[jenjang]}
                 onChange={() => handleCheckboxChange(jenjang)}
                 className="w-4 h-4 cursor-pointer accent-blue-600 rounded"
               />
@@ -66,7 +76,7 @@ export const ControlPanel = ({
             </label>
           ))}
         </div>
-      )}
+      </div>
 
       {selectedSchool && (
         <div className="px-4 py-3 border-b border-slate-200 bg-blue-50">
@@ -98,7 +108,7 @@ export const ControlPanel = ({
       </div>
 
       {/* Stats */}
-      <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-slate-200">
+      <div className="px-4 py-3 bg-linear-to-r from-blue-50 to-indigo-50 border-t border-slate-200">
         <div className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Statistik</div>
         <div className="flex items-center justify-between">
           <div>

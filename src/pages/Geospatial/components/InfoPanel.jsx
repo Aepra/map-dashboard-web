@@ -17,15 +17,11 @@ const getDisplayCoordinate = (latitude, longitude) => {
   return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 };
 
-const getDisplayDistanceKm = (distanceInMeters) => {
-  const meters = Number(distanceInMeters);
+const getDisplayDistanceMeters = (distanceValue) => {
+  const meters = Number(distanceValue);
   if (!Number.isFinite(meters)) return null;
 
-  const km = meters / 1000;
-  return `${km.toLocaleString('id-ID', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} km`;
+  return `${Math.round(meters)} m`;
 };
 
 export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], onClose }) => {
@@ -187,7 +183,7 @@ export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], on
         <div>
           <span className="text-gray-600">Jarak:</span>
           <div className="font-semibold text-gray-800">
-            {getDisplayDistanceKm(selectedStudent.jarak_meter ?? selectedStudent.jarak) || '-'}
+            {getDisplayDistanceMeters(selectedStudent.jarak_meter ?? selectedStudent.jarak) || '-'}
           </div>
         </div>
         <div>

@@ -1,20 +1,11 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Registrasi from './pages/Registrasi';
 import Demografi from './pages/Demografi';
 import Geospatial from './pages/Geospatial';
 import BerkebutuhanKhusus from './pages/BerkebutuhanKhusus';
 import SeragamGratis from './pages/SeragamGratis';
-
-
-const PAGE_KEYS = [
-  'registrasi',
-  'demografi',
-  'geospatial',
-  'kebutuhan',
-  'seragam',
-];
 
 function App() {
   const [activePage, setActivePage] = useState('registrasi');
@@ -39,12 +30,21 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-gray-900 overflow-hidden font-sans">
+    <div className="flex h-screen w-screen bg-white overflow-hidden font-sans">
       {/* Global Navigation Sidebar */}
-      <Sidebar activePage={activePage} onNavigate={handleNavigate} />
+      <Sidebar
+        activePage={activePage}
+        onNavigate={handleNavigate}
+      />
 
       {/* Main Content Area */}
-      <div className="flex-1 relative bg-white overflow-auto">
+      <div
+        className="relative bg-white overflow-auto"
+        style={{
+          minWidth: 0,
+          flex: '1 1 0%',
+        }}
+      >
         {/* Render all pages, only show the active one */}
         <div style={{ display: activePage === 'registrasi' ? 'block' : 'none', height: '100%' }}>
           <Registrasi restartKey={restartTokens.registrasi} onRestart={() => handleRestartPage('registrasi')} />

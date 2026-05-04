@@ -46,14 +46,18 @@ const getDisplayValue = (value) => {
 };
 
 const GeospatialMap = () => {
+  const MAX_RENDERED_STUDENTS_NEAR = 12000;
+  const MAX_RENDERED_STUDENTS_MID = 8000;
+  const MAX_RENDERED_STUDENTS_FAR = 5000;
+
   const [currentZoom, setCurrentZoom] = useState(DEFAULT_VIEW_STATE.zoom);
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedJalur, setSelectedJalur] = useState('all');
-  const [selectedJenjang, setSelectedJenjang] = useState('keduanya');
+  const [selectedJalur, setSelectedJalur] = useState('all');  const [selectedJenjang, setSelectedJenjang] = useState('keduanya');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [vizMode, setVizMode] = useState('normal');
   const [hoveredInfo, setHoveredInfo] = useState(null);
+  const [showNavbar, setShowNavbar] = useState(true);
 
   // Keep zoom updates lightweight to avoid re-render storms while panning.
   const lastZoomRef = useRef(DEFAULT_VIEW_STATE.zoom);
@@ -104,7 +108,25 @@ const GeospatialMap = () => {
   const schoolData = useSchoolData(filteredData);
 
   const activeSchoolName = getDisplayValue(selectedStudent?.nama_sekolah_tujuan) || getDisplayValue(selectedSchool);
-  const visibleStudentData = selectedStudent ? [selectedStudent] : filteredData;
+
+  // Reduce render load at low zoom by adaptively sampling points.
+  const visibleStudentData = useMemo(() => {
+    if (vizMode === 'sekolah') return [];
+    if (selectedStudent) return [selectedStudent];
+
+    const totalStudents = filteredData.length;
+    if (totalStudents === 0) return [];
+
+    let maxRendered = MAX_RENDERED_STUDENTS_NEAR;
+    if (currentZoom < 10) maxRendered = MAX_RENDERED_STUDENTS_MID;
+    if (currentZoom < 9) maxRendered = MAX_RENDERED_STUDENTS_FAR;
+
+    if (totalStudents <= maxRendered) return filteredData;
+
+    const step = Math.max(1, Math.ceil(totalStudents / maxRendered));
+    return filteredData.filter((_, index) => index % step === 0);
+  }, [vizMode, selectedStudent, filteredData, currentZoom]);
+
   const visibleSchoolData = selectedStudent
     ? schoolData.filter((school) => school.nama === activeSchoolName)
     : schoolData;
@@ -189,8 +211,8 @@ const GeospatialMap = () => {
   const layers = useMemo(() => {
     const layerList = [];
 
-    // Add student layer
-    if (visibleStudentData.length > 0) {
+    // Add student layer (skip when mode is 'sekolah')
+    if (vizMode !== 'sekolah' && visibleStudentData.length > 0) {
       layerList.push(
         createStudentLayer(visibleStudentData, currentZoom, vizMode, handleSelectStudent)
       );
@@ -224,6 +246,17 @@ const GeospatialMap = () => {
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
       zIndex: 10,
       gap: 16,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      width: '100%',
+      animation: showNavbar ? 'none' : 'none',
+      transform: showNavbar ? 'translateY(0)' : 'translateY(-100%)',
+      opacity: showNavbar ? 1 : 0,
+      pointerEvents: showNavbar ? 'auto' : 'none',
+      transition: 'transform 0.28s ease, opacity 0.2s ease',
+      overflow: 'hidden',
     }}>
       {/* Left: Filters */}
       <div style={{
@@ -286,6 +319,7 @@ const GeospatialMap = () => {
           >
             <option value="normal">Normal</option>
             <option value="dense">Padat</option>
+            <option value="sekolah">Sekolah</option>
           </select>
         </div>
       </div>
@@ -315,7 +349,7 @@ const GeospatialMap = () => {
           fontWeight: 700,
           color: '#1e40af',
         }}>
-          {filteredData.length.toLocaleString('id-ID')}
+          {(vizMode === 'sekolah' ? schoolData.length : filteredData.length).toLocaleString('id-ID')}
         </span>
       </div>
     </div>
@@ -324,6 +358,35 @@ const GeospatialMap = () => {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#f9fafb' }}>
       {topBar}
+      <button
+        onClick={() => setShowNavbar(!showNavbar)}
+        aria-label={showNavbar ? 'Tutup navbar' : 'Buka navbar'}
+        title={showNavbar ? 'Tutup navbar' : 'Buka navbar'}
+        style={{
+          position: 'absolute',
+          right: 7,
+          top: showNavbar ? 63 : 0,
+          zIndex: 20,
+          width: 34,
+          height: 34,
+          borderRadius: '0 0 9px 9px',
+          border: '1px solid #e2e8f0',
+          borderTop: 'none',
+          background: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(15,23,42,0.08)',
+          transition: 'transform 0.18s ease, box-shadow 0.18s ease, top 0.28s ease',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(1px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(15,23,42,0.12)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(15,23,42,0.08)'; }}
+      >
+        <span style={{ fontSize: 14, lineHeight: 1, color: 'rgb(182, 32, 37)', transition: 'transform 0.18s ease' }}>
+          {showNavbar ? '^' : 'v'}
+        </span>
+      </button>
       {loading && <LoadingOverlay />}
       {error && <ErrorOverlay message={error} />}
       
@@ -344,9 +407,9 @@ const GeospatialMap = () => {
         layers={layers}
         onHover={(hovered) => setHoveredInfo(getTooltipContent(hovered))}
         getCursor={() => 'pointer'}
-        style={{ width: '100%', height: 'calc(100% - 44px)', position: 'relative' }}
+        style={{ width: '100%', height: '100%', position: 'relative' }}
       >
-        <MapView mapStyle={MAP_STYLE} />
+        <MapView mapStyle={MAP_STYLE} attributionControl={false} />
       </DeckGL>
 
       {/* Hover Tooltip */}
@@ -385,12 +448,14 @@ const GeospatialMap = () => {
       )}
 
       {/* Stats Panel - Bottom Center */}
-      <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
-        <StatsPanel
-          totalData={filteredData.length}
-          totalStats={stats}
-        />
-      </div>
+      {!loading && (
+        <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}>
+          <StatsPanel
+            totalData={filteredData.length}
+            totalStats={stats}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -21,7 +21,14 @@ const tintRgb = ([red, green, blue], factor) =>
     clampChannel(blue * factor),
   ].join(',');
 
+const schoolIconUrlCache = new Map();
+
 const createSchoolIconUrl = (schoolName) => {
+  const cacheKey = schoolName || 'N/A';
+  if (schoolIconUrlCache.has(cacheKey)) {
+    return schoolIconUrlCache.get(cacheKey);
+  }
+
   const baseColor = parseRgb(getSchoolColorRGB(schoolName));
   const roofColor = tintRgb(baseColor, 0.82);
   const wallColor = tintRgb(baseColor, 1.18);
@@ -29,7 +36,7 @@ const createSchoolIconUrl = (schoolName) => {
   const accentColor = tintRgb(baseColor, 1.35);
   const shadowColor = tintRgb(baseColor, 0.58);
 
-  return (
+  const iconUrl =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' +
@@ -63,10 +70,11 @@ const createSchoolIconUrl = (schoolName) => {
           '<rect x="38" y="23" width="20" height="7" rx="1.5" fill="#fef3c7"/>' +
         '</g>' +
       '</svg>'
-    )
-  );
-};
+    );
 
+  schoolIconUrlCache.set(cacheKey, iconUrl);
+  return iconUrl;
+};
 const getEstimatedStudentSize = (zoom) => {
   if (zoom < 8) return 2;
   if (zoom < 11) return 3;
@@ -210,7 +218,7 @@ export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent)
     getLineColor: zoom >= 12 ? [255, 255, 255, 100] : [255, 255, 255, 0],
     getLineWidth: zoom >= 12 ? 1 : 0,
     lineWidthMinPixels: 0,
-    antialiasing: true,
+    antialiasing: zoom >= 11,
     onClick: ({ object }) => {
       if (object && onSelectStudent && zoomLevel.pickable) {
         onSelectStudent(object);
@@ -258,7 +266,7 @@ export const createSchoolLayer = (schoolData, zoom, onSelectSchool) => {
     opacity: getOpacity(),
     pickable: zoom >= 10, // Only clickable when visible
     wrapLongitude: false,
-    antialiasing: true,
+    antialiasing: zoom >= 11,
     onClick: ({ object }) => {
       if (object && onSelectSchool && zoom >= 10) {
         onSelectSchool(object.nama);

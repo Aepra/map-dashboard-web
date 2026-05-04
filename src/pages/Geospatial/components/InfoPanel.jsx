@@ -17,6 +17,13 @@ const getDisplayCoordinate = (latitude, longitude) => {
   return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 };
 
+const getDisplayDistanceMeters = (distanceValue) => {
+  const meters = Number(distanceValue);
+  if (!Number.isFinite(meters)) return null;
+
+  return `${Math.round(meters)} m`;
+};
+
 export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], onClose }) => {
   // If no student selected but a school name is provided, show school details
   if (!selectedStudent && selectedSchool) {
@@ -41,7 +48,7 @@ export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], on
     return (
       <div className="bg-white/95 rounded-lg shadow-lg border border-gray-300 backdrop-blur-sm px-4 py-3 max-w-xs">
         <div className="flex justify-between items-start mb-2">
-          <h2 className="text-sm font-bold text-gray-800">🏫 Detail Sekolah</h2>
+          <h2 className="text-sm font-bold text-gray-800"> Detail Sekolah</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-lg leading-none"
@@ -146,7 +153,7 @@ export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], on
   return (
     <div className="bg-white/95 rounded-lg shadow-lg border border-gray-300 backdrop-blur-sm px-4 py-3 max-w-xs">
       <div className="flex justify-between items-start mb-2">
-        <h2 className="text-sm font-bold text-gray-800">📋 Detail Siswa</h2>
+        <h2 className="text-sm font-bold text-gray-800"> Detail Siswa</h2>
         <button
           onClick={onClose}
           className="text-gray-500 hover:text-gray-700 text-lg leading-none"
@@ -176,7 +183,7 @@ export const InfoPanel = ({ selectedStudent, selectedSchool, schoolData = [], on
         <div>
           <span className="text-gray-600">Jarak:</span>
           <div className="font-semibold text-gray-800">
-            {getDisplayValue(selectedStudent.jarak) || '-'}
+            {getDisplayDistanceMeters(selectedStudent.jarak_meter ?? selectedStudent.jarak) || '-'}
           </div>
         </div>
         <div>

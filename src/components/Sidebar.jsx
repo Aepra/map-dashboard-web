@@ -1,4 +1,3 @@
-import React from 'react';
 import LogoIcon from '../assets/images/LogoColor.png';
 import registrasiIcon from '../assets/icons/registrasi_icon.png';
 import demografiIcon from '../assets/icons/demografi_icon.png';
@@ -8,7 +7,7 @@ import sergraIcon from '../assets/icons/seragamgratis_icon.png';
 
 /**
  * Global Navigation Sidebar
- * Universal menu container for all pages in the app
+ * Universal menu container for all pages in th e app
  */
 const Sidebar = ({
   activePage = 'geospatial',
@@ -19,7 +18,14 @@ const Sidebar = ({
   };
 
   return (
-    <aside className="w-62.5 flex-none bg-white border-r border-gray-200 h-full flex flex-col z-40" style={{ position: 'relative' }}>
+    <aside
+      className="flex-none bg-white border-r border-gray-200 h-full flex flex-col z-40"
+      style={{
+        position: 'relative',
+        overflow: 'visible',
+        width: '250px',
+      }}
+    >
       {/* Header/Logo */}
       <div className="px-4 py-4">
         <div className="flex items-center gap-2.5">

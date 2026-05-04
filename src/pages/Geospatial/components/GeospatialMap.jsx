@@ -111,6 +111,7 @@ const GeospatialMap = () => {
 
   // Reduce render load at low zoom by adaptively sampling points.
   const visibleStudentData = useMemo(() => {
+    if (vizMode === 'sekolah') return [];
     if (selectedStudent) return [selectedStudent];
 
     const totalStudents = filteredData.length;
@@ -124,7 +125,7 @@ const GeospatialMap = () => {
 
     const step = Math.max(1, Math.ceil(totalStudents / maxRendered));
     return filteredData.filter((_, index) => index % step === 0);
-  }, [selectedStudent, filteredData, currentZoom]);
+  }, [vizMode, selectedStudent, filteredData, currentZoom]);
 
   const visibleSchoolData = selectedStudent
     ? schoolData.filter((school) => school.nama === activeSchoolName)
@@ -210,8 +211,8 @@ const GeospatialMap = () => {
   const layers = useMemo(() => {
     const layerList = [];
 
-    // Add student layer
-    if (visibleStudentData.length > 0) {
+    // Add student layer (skip when mode is 'sekolah')
+    if (vizMode !== 'sekolah' && visibleStudentData.length > 0) {
       layerList.push(
         createStudentLayer(visibleStudentData, currentZoom, vizMode, handleSelectStudent)
       );
@@ -318,6 +319,7 @@ const GeospatialMap = () => {
           >
             <option value="normal">Normal</option>
             <option value="dense">Padat</option>
+            <option value="sekolah">Sekolah</option>
           </select>
         </div>
       </div>
@@ -347,7 +349,7 @@ const GeospatialMap = () => {
           fontWeight: 700,
           color: '#1e40af',
         }}>
-          {filteredData.length.toLocaleString('id-ID')}
+          {(vizMode === 'sekolah' ? schoolData.length : filteredData.length).toLocaleString('id-ID')}
         </span>
       </div>
     </div>

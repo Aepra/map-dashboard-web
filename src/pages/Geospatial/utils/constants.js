@@ -31,10 +31,10 @@ export const DEPLOYMENT_TYPE = DEPLOY_TYPE;
  * Default View State (Makassar center)
  */
 export const DEFAULT_VIEW_STATE = {
-  // Centered on Makassar city for a closer default view
+  // Centered on Makassar city with overview zoom
   longitude: 119.4327,
   latitude: -5.1477,
-  zoom: 21,
+  zoom: 12,
   pitch: 0,
   bearing: 0,
 };
@@ -124,4 +124,4 @@ export const SMP_COLORS = [
 /**
  * Map Style
  */
-export const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+export const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';

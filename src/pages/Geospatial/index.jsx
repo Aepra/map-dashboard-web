@@ -1,7 +1,4 @@
-// Geospatial page - Main map dashboard
-import React from 'react';
 import GeospatialMap from './components/GeospatialMap';
-import DashboardHeader from '../../components/DashboardHeader';
 
 export const Geospatial = ({ restartKey = 0, onRestart = () => {} }) => {
   return (
@@ -15,9 +12,8 @@ export const Geospatial = ({ restartKey = 0, onRestart = () => {} }) => {
         background: '#f9fafb',
       }}
     >
-      <DashboardHeader title="Dashboard Geospatial" onRestart={onRestart} />
       <div style={{ flex: 1, minHeight: 0 }}>
-        <GeospatialMap key={restartKey} />
+        <GeospatialMap key={restartKey} onRestart={onRestart} />
       </div>
     </div>
   );

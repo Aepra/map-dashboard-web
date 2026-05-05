@@ -12,6 +12,7 @@ on:
       - develop
     paths:
       - 'scripts/**'
+      - 'public/data/**'
       - '.github/workflows/sync-data.yml'
   workflow_dispatch:
 

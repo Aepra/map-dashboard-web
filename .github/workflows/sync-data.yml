@@ -1,0 +1,68 @@
+name: Sync Parquet Data
+
+on:
+  schedule:
+    # Run every 4 hours
+    - cron: '0 */4 * * *'
+  push:
+    branches:
+      - develop
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/sync-data.yml'
+  workflow_dispatch:
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download and sync parquet data
+        run: npm run download-data
+        env:
+          MICROSOFT_SQL_CONNECTION_STRING: ${{ secrets.MICROSOFT_SQL_CONNECTION_STRING }}
+          MICROSOFT_SQL_SERVER: ${{ secrets.MICROSOFT_SQL_SERVER }}
+          MICROSOFT_SQL_PORT: ${{ secrets.MICROSOFT_SQL_PORT }}
+          MICROSOFT_SQL_DATABASE: ${{ secrets.MICROSOFT_SQL_DATABASE }}
+          MICROSOFT_SQL_USER: ${{ secrets.MICROSOFT_SQL_USER }}
+          MICROSOFT_SQL_PASSWORD: ${{ secrets.MICROSOFT_SQL_PASSWORD }}
+          MICROSOFT_SQL_ENCRYPT: ${{ secrets.MICROSOFT_SQL_ENCRYPT }}
+          MICROSOFT_SQL_TRUST_SERVER_CERTIFICATE: ${{ secrets.MICROSOFT_SQL_TRUST_SERVER_CERTIFICATE }}
+          MICROSOFT_SQL_QUERY: ${{ secrets.MICROSOFT_SQL_QUERY }}
+
+      - name: Check if parquet file changed
+        id: check_changes
+        run: |
+          if git diff --quiet public/data/peta_murid.parquet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure Git
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Actions"
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git add public/data/peta_murid.parquet
+          git commit -m "chore: update parquet data - synced from Microsoft SQL Server at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git push origin develop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

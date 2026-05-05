@@ -37,6 +37,7 @@ jobs:
           MSSQL_DATABASE: ${{ secrets.MSSQL_DATABASE }}
           MSSQL_USERNAME: ${{ secrets.MSSQL_USERNAME }}
           MSSQL_PASSWORD: ${{ secrets.MSSQL_PASSWORD }}
+          MSSQL_QUERY: ${{ secrets.MSSQL_QUERY }}
           MSSQL_TRUST_SERVER_CERTIFICATE: true
           MSSQL_ENCRYPT: true
 

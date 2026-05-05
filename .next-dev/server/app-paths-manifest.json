@@ -1,7 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/(dashboards)/geospatial/page": "app/(dashboards)/geospatial/page.js",
-  "/(dashboards)/registrasi/page": "app/(dashboards)/registrasi/page.js",
-  "/(dashboards)/demografi/page": "app/(dashboards)/demografi/page.js",
-  "/(dashboards)/seragam-gratis/page": "app/(dashboards)/seragam-gratis/page.js"
-}

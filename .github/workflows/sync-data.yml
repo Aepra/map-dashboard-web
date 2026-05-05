@@ -33,15 +33,10 @@ jobs:
       - name: Download and sync parquet data
         run: npm run download-data
         env:
-          MICROSOFT_SQL_CONNECTION_STRING: ${{ secrets.MICROSOFT_SQL_CONNECTION_STRING }}
-          MICROSOFT_SQL_SERVER: ${{ secrets.MICROSOFT_SQL_SERVER }}
-          MICROSOFT_SQL_PORT: ${{ secrets.MICROSOFT_SQL_PORT }}
-          MICROSOFT_SQL_DATABASE: ${{ secrets.MICROSOFT_SQL_DATABASE }}
-          MICROSOFT_SQL_USER: ${{ secrets.MICROSOFT_SQL_USER }}
-          MICROSOFT_SQL_PASSWORD: ${{ secrets.MICROSOFT_SQL_PASSWORD }}
-          MICROSOFT_SQL_ENCRYPT: ${{ secrets.MICROSOFT_SQL_ENCRYPT }}
-          MICROSOFT_SQL_TRUST_SERVER_CERTIFICATE: ${{ secrets.MICROSOFT_SQL_TRUST_SERVER_CERTIFICATE }}
-          MICROSOFT_SQL_QUERY: ${{ secrets.MICROSOFT_SQL_QUERY }}
+          MSSQL_SERVER: ${{ secrets.MSSQL_SERVER }}
+          MSSQL_DATABASE: ${{ secrets.MSSQL_DATABASE }}
+          MSSQL_USERNAME: ${{ secrets.MSSQL_USERNAME }}
+          MSSQL_PASSWORD: ${{ secrets.MSSQL_PASSWORD }}
 
       - name: Check if parquet file changed
         id: check_changes

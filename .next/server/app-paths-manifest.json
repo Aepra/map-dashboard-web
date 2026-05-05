@@ -1,5 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/(dashboards)/registrasi/page": "app/(dashboards)/registrasi/page.js",
-  "/(dashboards)/geospatial/page": "app/(dashboards)/geospatial/page.js"
-}

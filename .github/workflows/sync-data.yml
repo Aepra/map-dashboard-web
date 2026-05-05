@@ -1,0 +1,94 @@
+name: Sync Parquet Data
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    # Run every 4 hours
+    - cron: '0 */4 * * *'
+  push:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Log sync start
+        run: |
+          echo "Starting parquet sync run"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Time (UTC): $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download and sync parquet data
+        run: npm run download-data
+        env:
+          MSSQL_SERVER: ${{ secrets.MSSQL_SERVER }}
+          MSSQL_DATABASE: ${{ secrets.MSSQL_DATABASE }}
+          MSSQL_USERNAME: ${{ secrets.MSSQL_USERNAME }}
+          MSSQL_PASSWORD: ${{ secrets.MSSQL_PASSWORD }}
+          MSSQL_QUERY: ${{ secrets.MSSQL_QUERY }}
+          MSSQL_TRUST_SERVER_CERTIFICATE: true
+          MSSQL_ENCRYPT: true
+
+      - name: Log parquet status
+        run: |
+          if [ -f public/data/peta_murid.parquet ]; then
+            echo "Parquet file exists: public/data/peta_murid.parquet"
+            ls -lh public/data/peta_murid.parquet
+          else
+            echo "Parquet file not found after sync"
+            exit 1
+          fi
+
+      - name: Check if parquet file changed
+        id: check_changes
+        run: |
+          if git diff --quiet public/data/peta_murid.parquet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure Git
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Actions"
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git add public/data/peta_murid.parquet
+          git commit -m "chore: update parquet data - synced from Microsoft SQL Server at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git push origin HEAD:${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write run summary
+        if: always()
+        run: |
+          {
+            echo "## Parquet Sync Run Summary"
+            echo "- Branch: ${{ github.ref_name }}"
+            echo "- Time (UTC): $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            echo "- Parquet path: public/data/peta_murid.parquet"
+            echo "- Change detected: ${{ steps.check_changes.outputs.has_changes || 'unknown' }}"
+          } >> "$GITHUB_STEP_SUMMARY"

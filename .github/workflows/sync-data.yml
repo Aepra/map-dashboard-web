@@ -1,5 +1,8 @@
 name: Sync Parquet Data
 
+permissions:
+  contents: write
+
 on:
   schedule:
     # Run every 4 hours

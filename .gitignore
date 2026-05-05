@@ -18,6 +18,15 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
+
+# Certificates and private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
 
 # Parquet data files - INCLUDED for Vercel deployment
 # (Removed exclusion rule: public/data/*.parquet)

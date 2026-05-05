@@ -1,4 +1,4 @@
-import React from 'react';
+'use client';
 
 export const DashboardLoadingOverlay = ({ title = 'Memuat Dashboard', message = 'Mohon tunggu sebentar...', fullScreen = true }) => {
   return (

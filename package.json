@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/startup.js",
-    "dev:vite": "vite",
-    "build": "vite build",
+    "dev:next": "next dev -H 0.0.0.0 -p 5173",
+    "build": "next build",
+    "start": "next start -p 5173",
     "lint": "eslint .",
-    "preview": "vite preview",
     "download-data": "node scripts/downloadParquet.js",
     "service:download": "node scripts/dataService.js"
   },
@@ -19,27 +19,27 @@
     "@deck.gl/widgets": "^9.3.2",
     "@duckdb/duckdb-wasm": "^1.33.1-dev45.0",
     "apache-arrow": "^20.0.0",
+    "dotenv": "^17.4.2",
     "lucide-react": "^1.14.0",
     "maplibre-gl": "^5.24.0",
+    "mssql": "^12.5.2",
+    "next": "^15.3.3",
     "node-cron": "^4.2.1",
+    "parquetjs-lite": "^0.8.7",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-map-gl": "^8.1.1",
-    "react-router-dom": "^7.14.2"
+    "react-map-gl": "^8.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.2.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.5.0",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
     "postcss": "^8.5.12",
-    "tailwindcss": "^4.2.4",
-    "vite": "^8.0.10"
+    "tailwindcss": "^4.2.4"
   }
 }

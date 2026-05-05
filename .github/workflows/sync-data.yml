@@ -10,10 +10,7 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - 'scripts/**'
-      - 'public/data/**'
-      - '.github/workflows/sync-data.yml'
+      - main
   workflow_dispatch:
 
 jobs:
@@ -24,13 +21,13 @@ jobs:
       - name: Log sync start
         run: |
           echo "Starting parquet sync run"
-          echo "Branch: develop"
+          echo "Branch: ${{ github.ref_name }}"
           echo "Time (UTC): $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
 
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: ${{ github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -81,7 +78,7 @@ jobs:
         run: |
           git add public/data/peta_murid.parquet
           git commit -m "chore: update parquet data - synced from Microsoft SQL Server at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-          git push origin develop
+          git push origin HEAD:${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -90,7 +87,7 @@ jobs:
         run: |
           {
             echo "## Parquet Sync Run Summary"
-            echo "- Branch: develop"
+            echo "- Branch: ${{ github.ref_name }}"
             echo "- Time (UTC): $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
             echo "- Parquet path: public/data/peta_murid.parquet"
             echo "- Change detected: ${{ steps.check_changes.outputs.has_changes || 'unknown' }}"

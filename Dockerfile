@@ -14,7 +14,7 @@ COPY . .
 # Create data directory
 RUN mkdir -p public/data
 
-# Expose Vite dev server port
+# Expose Next.js dev server port
 EXPOSE 5173
 
 # Environment

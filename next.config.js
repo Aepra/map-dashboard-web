@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   // Disable Next.js dev tools in development
   reactStrictMode: false,
   onDemandEntries: {
@@ -8,7 +9,7 @@ const nextConfig = {
   },
   // Disable dev overlay
   devIndicators: {
-    buildActivityPosition: 'bottom-right',
+    position: 'bottom-right',
   },
 };
 

@@ -37,6 +37,8 @@ jobs:
           MSSQL_DATABASE: ${{ secrets.MSSQL_DATABASE }}
           MSSQL_USERNAME: ${{ secrets.MSSQL_USERNAME }}
           MSSQL_PASSWORD: ${{ secrets.MSSQL_PASSWORD }}
+          MSSQL_TRUST_SERVER_CERTIFICATE: true
+          MSSQL_ENCRYPT: true
 
       - name: Check if parquet file changed
         id: check_changes

@@ -28,6 +28,10 @@ dist-ssr
 *.pfx
 *.crt
 
+# Generated data files (parquet) — ignore to avoid committing large artifacts
+/public/data/*
+!/public/data/.gitkeep
+
 # Parquet data files - INCLUDED for Vercel deployment
 # (Removed exclusion rule: public/data/*.parquet)
 # public/data/.gitkeep is still tracked

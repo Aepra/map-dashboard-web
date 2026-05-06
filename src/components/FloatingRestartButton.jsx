@@ -1,6 +1,11 @@
 import { useState } from 'react';
 
-export const FloatingRestartButton = ({ onRestart = () => {} }) => {
+export const FloatingRestartButton = ({
+  onRestart = () => {},
+  bottom = '24px',
+  left = '24px',
+  compact = false,
+}) => {
   const [spinKey, setSpinKey] = useState(0);
 
   const handleClick = () => {
@@ -23,9 +28,13 @@ export const FloatingRestartButton = ({ onRestart = () => {} }) => {
       
       <button
         onClick={handleClick}
-        className="fixed bottom-6 left-6 z-50 group"
+        className="group"
         style={{
-          padding: '12px',
+          position: 'fixed',
+          bottom,
+          left,
+          zIndex: 120,
+          padding: compact ? '10px' : '12px',
           borderRadius: '50%',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
           border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -40,7 +49,7 @@ export const FloatingRestartButton = ({ onRestart = () => {} }) => {
         onMouseEnter={(e) => {
           e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
           e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08)';
-          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.transform = compact ? 'scale(1.06)' : 'scale(1.1)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
@@ -50,8 +59,8 @@ export const FloatingRestartButton = ({ onRestart = () => {} }) => {
       >
         <svg
           key={spinKey}
-          width="20"
-          height="20"
+          width={compact ? 18 : 20}
+          height={compact ? 18 : 20}
           viewBox="0 0 20 20"
           fill="none"
           stroke="currentColor"

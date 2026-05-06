@@ -1,4 +1,4 @@
-import LogoIcon from '../assets/images/LogoColor.png';
+import LogoIcon from '../assets/images/ICON_SPMB.svg';
 import registrasiIconDark from '../assets/icons/registrasi_icon_dark.svg';
 import registrasiIconLight from '../assets/icons/registrasi_icon_light.svg';
 import demografiIconDark from '../assets/icons/demografi_icon_dark.svg';

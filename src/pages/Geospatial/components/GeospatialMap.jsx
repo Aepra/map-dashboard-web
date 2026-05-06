@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import DeckGL from '@deck.gl/react';
 import { Map as MapView } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -12,6 +12,8 @@ import { LoadingOverlay } from '../components/LoadingOverlay';
 import { ErrorOverlay } from '../components/ErrorOverlay';
 import { InfoPanel } from '../components/InfoPanel';
 import { StatsPanel } from '../components/StatsPanel';
+import FloatingRestartButton from '../../../components/FloatingRestartButton';
+import logoColor from '../../../assets/images/ICON_SPMB.svg';
 
 
 
@@ -45,6 +47,30 @@ const getDisplayValue = (value) => {
   const text = String(value).trim();
   if (!text || missingValueLabels.has(text.toLowerCase())) return null;
   return text;
+};
+
+const ChevronIcon = ({ direction = 'left' }) => {
+  const rotate = direction === 'right' ? 180 : 0;
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      focusable="false"
+      style={{ transform: `rotate(${rotate}deg)` }}
+    >
+      <path
+        d="M14.5 6.5L9 12l5.5 5.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 };
 
 // Simple raster satellite basemap (ArcGIS World Imagery)
@@ -90,6 +116,50 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
   const [showNavbar, setShowNavbar] = useState(true);
   const [showSatelliteDrawer, setShowSatelliteDrawer] = useState(true);
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
+  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
+  const [topBarHeight, setTopBarHeight] = useState(96);
+  const topBarRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = viewportWidth <= 768;
+  const isTablet = viewportWidth <= 1024 && viewportWidth > 768;
+  const isResponsiveLayout = isMobile || isTablet;
+  const isCompactHeader = isResponsiveLayout;
+
+  useEffect(() => {
+    if (!topBarRef.current) return;
+
+    const updateTopBarHeight = () => {
+      const height = Math.ceil(topBarRef.current?.getBoundingClientRect().height || 96);
+      setTopBarHeight(height);
+    };
+
+    updateTopBarHeight();
+
+    const observer = new ResizeObserver(updateTopBarHeight);
+    observer.observe(topBarRef.current);
+
+    return () => observer.disconnect();
+  }, [viewportWidth, showNavbar]);
+
+  const responsiveSelectStyle = {
+    ...selectDropdownStyle,
+    minWidth: isMobile ? '100%' : isTablet ? '128px' : '148px',
+    width: isMobile ? '100%' : 'auto',
+    padding: isMobile ? '8px 10px' : isTablet ? '9px 12px' : '10px 14px',
+    fontSize: isMobile ? 13 : 14,
+  };
+
+  const responsiveLabelStyle = {
+    ...labelStyle,
+    fontSize: isMobile ? 11 : 12,
+    letterSpacing: isMobile ? '0.3px' : '0.4px',
+  };
 
   // Keep zoom updates lightweight to avoid re-render storms while panning.
   const lastZoomRef = useRef(DEFAULT_VIEW_STATE.zoom);
@@ -319,17 +389,20 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
   }, [visibleStudentData, visibleSchoolData, currentZoom, vizMode, selectedStudent, handleSelectStudent, handleSelectSchool]);
 
   const topBar = (
-    <div style={{
+    <div
+      ref={topBarRef}
+      style={{
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-start',
       flexWrap: 'wrap',
-      padding: '16px 32px',
+      padding: isMobile ? '10px 12px' : isTablet ? '12px 18px' : '16px 24px 16px 24px',
+      paddingRight: isMobile ? '12px' : isTablet ? '18px' : '188px',
       background: 'linear-gradient(to right, #ffffff 0%, #fafbfc 100%)',
       borderBottom: '1px solid #e2e8f0',
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
       zIndex: 10,
-      gap: 20,
+      gap: isMobile ? 10 : 14,
       position: 'absolute',
       top: 0,
       left: 0,
@@ -341,85 +414,40 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
       pointerEvents: showNavbar ? 'auto' : 'none',
       transition: 'transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease',
       willChange: 'transform, opacity',
+      fontFamily: 'Nunito, sans-serif',
     }}>
-      {/* Left: Filters */}
+      {/* Right logo moves to top on tablet/mobile - now only a single combined image */}
       <div style={{
+        order: isCompactHeader ? 0 : 3,
+        position: isCompactHeader ? 'static' : 'absolute',
+        right: isCompactHeader ? 'auto' : 24,
+        top: isCompactHeader ? 'auto' : '50%',
+        transform: isCompactHeader ? 'none' : 'translateY(-50%)',
+        marginLeft: isCompactHeader ? 0 : 'auto',
         display: 'flex',
-        gap: 18,
         alignItems: 'center',
-        flexWrap: 'wrap',
-        minWidth: 0,
-        flex: '1 1 auto',
+        gap: 8,
+        flex: isCompactHeader ? '1 1 100%' : '0 0 auto',
+        width: isCompactHeader ? '100%' : 'auto',
+        zIndex: 12,
       }}>
-        {/* Jalur Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={labelStyle}>Jalur ({metrics.jalurCounts?.[selectedJalur] || 0})</label>
-          <select
-            value={selectedJalur}
-            onChange={e => setSelectedJalur(e.target.value)}
-            style={selectDropdownStyle}
-          >
-            <option value="all">Semua</option>
-            {uniqueJalur.map(val => (
-              <option key={val} value={val}>{val}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Mode Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={labelStyle}>Jenjang</label>
-          <select
-            value={selectedJenjang}
-            onChange={e => setSelectedJenjang(e.target.value)}
-            style={selectDropdownStyle}
-          >
-            <option value="keduanya">Semua</option>
-            {uniqueJenjang.map(val => (
-              <option key={val} value={val}>{val}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Status Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={labelStyle}>Status ({metrics.statusCounts?.[selectedStatus] || 0})</label>
-          <select
-            value={selectedStatus}
-            onChange={e => setSelectedStatus(e.target.value)}
-            style={selectDropdownStyle}
-          >
-            <option value="all">Semua</option>
-            {uniqueStatus.map(val => (
-              <option key={val} value={val}>{val}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Viz Mode Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: '8px' }}>
-          <label style={labelStyle}>Mode</label>
-          <select
-            value={vizMode}
-            onChange={e => setVizMode(e.target.value)}
-            style={selectDropdownStyle}
-          >
-            <option value="normal">Normal</option>
-            <option value="dense">Padat</option>
-            <option value="sekolah">Sekolah</option>
-          </select>
-        </div>
+        <img
+          src={logoColor}
+          alt="SPMB Disdik Makassar 2026"
+          style={{ width: isMobile ? 88 : isTablet ? 112 : 156, height: 'auto', objectFit: 'contain', display: 'block' }}
+        />
       </div>
 
-      {/* Center search */}
+      {/* Search first */}
       <div style={{
         position: 'relative',
-        flex: '1 1 420px',
-        maxWidth: '640px',
-        minWidth: '340px',
+        order: 1,
+        flex: isCompactHeader ? '1 1 100%' : '1 1 360px',
+        maxWidth: isMobile ? '100%' : '480px',
+        minWidth: isMobile ? 0 : '220px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: 12, boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
-          <span style={{ fontSize: 15, lineHeight: 1, color: '#94a3b8' }}>⌕</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, padding: isMobile ? '9px 10px' : '11px 13px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: 12, boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
+          <span style={{ fontSize: isMobile ? 13 : 15, lineHeight: 1, color: '#94a3b8' }}>⌕</span>
           <input
             type="text"
             value={searchTerm}
@@ -437,7 +465,7 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
               minWidth: 0,
               border: 'none',
               outline: 'none',
-              fontSize: 15,
+              fontSize: isMobile ? 13 : 15,
               color: '#0f172a',
               background: 'transparent',
             }}
@@ -457,7 +485,7 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                fontSize: 16,
+                fontSize: isMobile ? 14 : 16,
                 fontWeight: 700,
               }}
               aria-label="Clear search"
@@ -502,122 +530,72 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
         )}
       </div>
 
-      {/* Right: restart action */}
-      <button
-        type="button"
-        onClick={onRestart}
-        style={{
-          marginLeft: 'auto',
-          padding: '12px 18px',
-          borderRadius: 12,
-          border: '1px solid #fecaca',
-          background: 'linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%)',
-          color: '#991b1b',
-          fontSize: 14,
-          fontWeight: 800,
-          cursor: 'pointer',
-          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        Restart
-      </button>
-      <div
-        style={{
-          position: 'absolute',
-          top: 90,
-          right: showSatelliteDrawer ? 5 : -170,
-          zIndex: 23,
-          width: 170,
-          padding: 8,
-          borderRadius: 14,
-          border: '1px solid #e2e8f0',
-          background: 'rgba(255,255,255,0.96)',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 10px 26px rgba(15, 23, 42, 0.10)',
-          transition: 'right 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
-          overflow: 'visible',
-          display: 'flex',
-          alignItems: 'stretch',
-          gap: 8,
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => setShowSatelliteDrawer((prev) => !prev)}
-          aria-label={showSatelliteDrawer ? 'Sembunyikan drawer peta' : 'Tampilkan drawer peta'}
-          title={showSatelliteDrawer ? 'Sembunyikan drawer peta' : 'Tampilkan drawer peta'}
-          style={{
-            position: 'absolute',
-            left: -32,
-            top: 18,
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            border: '1px solid #e2e8f0',
-            background: '#fff',
-            color: '#0f172a',
-            fontSize: 14,
-            fontWeight: 800,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
-          }}
-        >
-          {showSatelliteDrawer ? '<' : '>'}
-        </button>
+      {/* Filters order: Jalur, Jenjang, Status, Mode */}
+      <div style={{
+        display: 'flex',
+        order: 2,
+        gap: isMobile ? 10 : 10,
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        minWidth: 0,
+        flex: isCompactHeader ? '1 1 100%' : '1 1 600px',
+        marginLeft: isCompactHeader ? 0 : 200,
+      }}>
+        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 8, flex: isMobile ? '1 1 calc(50% - 10px)' : isTablet ? '1 1 calc(50% - 12px)' : '0 1 auto', minWidth: isMobile ? 'calc(50% - 10px)' : isTablet ? 'calc(50% - 12px)' : 'auto' }}>
+          <label style={responsiveLabelStyle}>Jalur ({metrics.jalurCounts?.[selectedJalur] || 0})</label>
+          <select
+            value={selectedJalur}
+            onChange={e => setSelectedJalur(e.target.value)}
+            style={responsiveSelectStyle}
+          >
+            <option value="all">Semua</option>
+            {uniqueJalur.map(val => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setIsSatellite(false)}
-          title="Default"
-          aria-label="Default"
-          style={{
-            flex: '1 1 0',
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            padding: '8px 6px',
-            borderRadius: 10,
-            border: isSatellite ? '1px solid #e2e8f0' : '2px solid #0ea5e9',
-            background: isSatellite ? '#fff' : '#ecf8ff',
-            cursor: 'pointer',
-          }}
-        >
-          <div style={{ width: 34, height: 34, backgroundImage: 'url(//maps.gstatic.com/tactile/layerswitcher/ic_default_colors2-2x.png)', backgroundSize: '34px 34px', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }} />
-          <div style={{ fontSize: 11, lineHeight: 1, fontWeight: 800, color: '#0f172a', letterSpacing: '0.3px' }}>DEFAULT</div>
-        </button>
+        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 8, flex: isMobile ? '1 1 calc(50% - 10px)' : isTablet ? '1 1 calc(50% - 12px)' : '0 1 auto', minWidth: isMobile ? 'calc(50% - 10px)' : isTablet ? 'calc(50% - 12px)' : 'auto' }}>
+          <label style={responsiveLabelStyle}>Jenjang</label>
+          <select
+            value={selectedJenjang}
+            onChange={e => setSelectedJenjang(e.target.value)}
+            style={responsiveSelectStyle}
+          >
+            <option value="keduanya">Semua</option>
+            {uniqueJenjang.map(val => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setIsSatellite(true)}
-          title="Satelite"
-          aria-label="Satelite"
-          style={{
-            flex: '1 1 0',
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            padding: '8px 6px',
-            borderRadius: 10,
-            border: isSatellite ? '2px solid #0f172a' : '1px solid #e2e8f0',
-            background: isSatellite ? '#f0f4f8' : '#fff',
-            cursor: 'pointer',
-          }}
-        >
-          <div style={{ width: 34, height: 34, backgroundImage: 'url(//maps.gstatic.com/tactile/layerswitcher/ic_satellite-2x.png)', backgroundSize: '34px 34px', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }} />
-          <div style={{ fontSize: 11, lineHeight: 1, fontWeight: 800, color: '#0f172a', letterSpacing: '0.3px' }}>SATELITE</div>
-        </button>
+        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 8, flex: isMobile ? '1 1 calc(50% - 10px)' : isTablet ? '1 1 calc(50% - 12px)' : '0 1 auto', minWidth: isMobile ? 'calc(50% - 10px)' : isTablet ? 'calc(50% - 12px)' : 'auto' }}>
+          <label style={responsiveLabelStyle}>Status ({metrics.statusCounts?.[selectedStatus] || 0})</label>
+          <select
+            value={selectedStatus}
+            onChange={e => setSelectedStatus(e.target.value)}
+            style={responsiveSelectStyle}
+          >
+            <option value="all">Semua</option>
+            {uniqueStatus.map(val => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 8, flex: isMobile ? '1 1 calc(50% - 10px)' : isTablet ? '1 1 calc(50% - 12px)' : '0 1 auto', minWidth: isMobile ? 'calc(50% - 10px)' : isTablet ? 'calc(50% - 12px)' : 'auto' }}>
+          <label style={responsiveLabelStyle}>Mode</label>
+          <select
+            value={vizMode}
+            onChange={e => setVizMode(e.target.value)}
+            style={responsiveSelectStyle}
+          >
+            <option value="normal">Normal</option>
+            <option value="dense">Padat</option>
+            <option value="sekolah">Sekolah</option>
+          </select>
+        </div>
       </div>
-
     </div>
   );
 
@@ -626,6 +604,12 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }}>
         {topBar}
       </div>
+      <FloatingRestartButton
+        onRestart={onRestart}
+        bottom={isResponsiveLayout ? (isMobile ? '74px' : '82px') : '24px'}
+        left={isResponsiveLayout ? '12px' : '24px'}
+        compact={isResponsiveLayout}
+      />
       <button
         type="button"
         onClick={() => setShowNavbar((current) => !current)}
@@ -634,16 +618,16 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
         style={{
           position: 'absolute',
           left: '50%',
-          top: showNavbar ? 80 : 0,
+          top: showNavbar ? topBarHeight : 0,
           transform: 'translateX(-50%)',
-          width: 46,
-          height: 28,
-          borderRadius: '0 0 12px 12px',
+          width: isMobile ? 42 : 46,
+          height: isMobile ? 26 : 28,
+          borderRadius: '0 0 10px 10px',
           border: '1px solid #e2e8f0',
           borderTop: 'none',
           background: '#fff',
           color: 'rgb(182, 32, 37)',
-          fontSize: 15,
+          fontSize: isMobile ? 13 : 15,
           fontWeight: 800,
           cursor: 'pointer',
           boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
@@ -681,6 +665,105 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
           attributionControl={false}
         />
       </DeckGL>
+
+      <div
+        style={{
+          position: 'absolute',
+          right: showSatelliteDrawer ? (isMobile ? 8 : isTablet ? 10 : 12) : (isMobile ? -142 : isTablet ? -160 : -185),
+          bottom: isMobile ? 8 : 12,
+          zIndex: 23,
+          width: isMobile ? 132 : isTablet ? 148 : 176,
+          padding: isMobile ? 6 : isTablet ? 7 : 8,
+          borderRadius: isMobile ? 12 : 16,
+          border: '1px solid #e2e8f0',
+          background: 'rgba(255,255,255,0.96)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 10px 26px rgba(15, 23, 42, 0.10)',
+          transition: 'right 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+          overflow: 'visible',
+          display: 'flex',
+          alignItems: 'stretch',
+          gap: 8,
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setShowSatelliteDrawer((prev) => !prev)}
+          aria-label={showSatelliteDrawer ? 'Sembunyikan drawer peta' : 'Tampilkan drawer peta'}
+          title={showSatelliteDrawer ? 'Sembunyikan drawer peta' : 'Tampilkan drawer peta'}
+          style={{
+            position: 'absolute',
+            left: isMobile ? -28 : -33,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: isMobile ? 26 : 32,
+            height: isMobile ? 26 : 32,
+            borderRadius: 999,
+            border: '1px solid #e2e8f0',
+            background: '#fff',
+            color: '#0f172a',
+            fontSize: isMobile ? 12 : 14,
+            fontWeight: 800,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
+          }}
+        >
+          <ChevronIcon direction={showSatelliteDrawer ? 'left' : 'right'} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsSatellite(false)}
+          title="Default"
+          aria-label="Default"
+          style={{
+            flex: '1 1 0',
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: isMobile ? 3 : isTablet ? 4 : 6,
+            padding: isMobile ? '5px 4px' : isTablet ? '6px 5px' : '8px 6px',
+            borderRadius: isMobile ? 8 : 10,
+            border: isSatellite ? '1px solid #e2e8f0' : '2px solid #0ea5e9',
+            background: isSatellite ? '#fff' : '#ecf8ff',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <div style={{ width: isMobile ? 24 : isTablet ? 28 : 34, height: isMobile ? 24 : isTablet ? 28 : 34, backgroundImage: 'url(//maps.gstatic.com/tactile/layerswitcher/ic_default_colors2-2x.png)', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }} />
+          <div style={{ fontSize: isMobile ? 8 : isTablet ? 9 : 11, lineHeight: 1, fontWeight: 800, color: '#0f172a', letterSpacing: isMobile ? '0.1px' : '0.3px' }}>DEFAULT</div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsSatellite(true)}
+          title="Satelite"
+          aria-label="Satelite"
+          style={{
+            flex: '1 1 0',
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: isMobile ? 3 : isTablet ? 4 : 6,
+            padding: isMobile ? '5px 4px' : isTablet ? '6px 5px' : '8px 6px',
+            borderRadius: isMobile ? 8 : 10,
+            border: isSatellite ? '2px solid #0f172a' : '1px solid #e2e8f0',
+            background: isSatellite ? '#f0f4f8' : '#fff',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <div style={{ width: isMobile ? 24 : isTablet ? 28 : 34, height: isMobile ? 24 : isTablet ? 28 : 34, backgroundImage: 'url(//maps.gstatic.com/tactile/layerswitcher/ic_satellite-2x.png)', backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }} />
+          <div style={{ fontSize: isMobile ? 8 : isTablet ? 9 : 11, lineHeight: 1, fontWeight: 800, color: '#0f172a', letterSpacing: isMobile ? '0.1px' : '0.3px' }}>SATELITE</div>
+        </button>
+      </div>
 
       {/* Hover Tooltip */}
       {hoveredInfo && (
@@ -722,18 +805,26 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
         <div 
           style={{ 
             position: 'absolute', 
-            bottom: 20, 
-            left: '50%', 
-            transform: showNavbar ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(120%)',
+            bottom: isResponsiveLayout ? 12 : 20,
+            left: isResponsiveLayout ? 12 : '50%',
+            transform: showNavbar
+              ? isResponsiveLayout
+                ? 'translateX(0) translateY(0)'
+                : 'translateX(-50%) translateY(0)'
+              : isResponsiveLayout
+                ? 'translateX(0) translateY(120%)'
+                : 'translateX(-50%) translateY(120%)',
             opacity: showNavbar ? 1 : 0,
             zIndex: 100,
             transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease',
             pointerEvents: showNavbar ? 'auto' : 'none',
+            maxWidth: isResponsiveLayout ? 'calc(100vw - 170px)' : 'none',
           }}
         >
           <StatsPanel
             totalData={filteredData.length}
             totalStats={stats}
+            compact={isResponsiveLayout}
           />
         </div>
       )}

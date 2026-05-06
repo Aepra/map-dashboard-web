@@ -124,7 +124,6 @@ export const useDuckDBData = (viewportBounds, filters, limit = null) => {
           }
 
           setInitialized(true);
-          setLoading(false);
         }
       } catch (err) {
         if (!cancelled) {
@@ -148,11 +147,10 @@ export const useDuckDBData = (viewportBounds, filters, limit = null) => {
 
     if (!allData) return;
 
-    setLoading(true);
-
     // Debounce rapid changes to avoid flooding the worker/main thread
     if (workerListenerAttachedRef.current && worker._debounceTimer) clearTimeout(worker._debounceTimer);
     worker._debounceTimer = setTimeout(() => {
+      setLoading(true);
       worker.postMessage({
         type: 'FILTER_VIEWPORT',
         payload: {

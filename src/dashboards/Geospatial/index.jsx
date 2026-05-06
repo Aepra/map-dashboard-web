@@ -1,5 +1,3 @@
-'use client';
-
 import GeospatialMap from './components/GeospatialMap';
 
 export const Geospatial = ({ restartKey = 0, onRestart = () => {} }) => {

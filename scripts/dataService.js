@@ -21,6 +21,8 @@ const GITHUB_URL = 'https://raw.githubusercontent.com/Aepra/map-data-pipeline/ma
 const OUTPUT_PATH = path.join(__dirname, '../public/data/peta_murid.parquet');
 const LOG_FILE = path.join(__dirname, '../public/data/download.log');
 
+fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
+
 const isValidParquetFile = (filePath) => {
   try {
     if (!fs.existsSync(filePath)) return false;

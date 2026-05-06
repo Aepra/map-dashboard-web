@@ -18,6 +18,8 @@ const __dirname = path.dirname(__filename);
 const GITHUB_URL = 'https://raw.githubusercontent.com/Aepra/map-data-pipeline/main/data/peta_murid.parquet';
 const OUTPUT_PATH = path.join(__dirname, '../public/data/peta_murid.parquet');
 
+fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
+
 console.log('📥 Downloading Parquet file from GitHub...');
 console.log(`📍 URL: ${GITHUB_URL}`);
 console.log(`💾 Saving to: ${OUTPUT_PATH}\n`);

@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * Loading Overlay - ditampilkan saat DuckDB sedang process data
  */

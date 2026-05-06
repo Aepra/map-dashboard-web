@@ -1,11 +1,3 @@
-import React from 'react';
-
-const COLOR_MAP = {
-  SD: 'text-orange-600',
-  SMP: 'text-blue-600',
-  PAUD: 'text-yellow-600',
-};
-
 const formatK = (num) => {
   if (!num) return '0';
   return num >= 1000
@@ -13,7 +5,7 @@ const formatK = (num) => {
     : num.toLocaleString();
 };
 
-export const StatsPanel = ({ totalData = 0, totalStats = {} }) => {
+export const StatsPanel = ({ totalStats = {} }) => {
   const safeStats = totalStats || {};
 
   return (

@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MapPin, Users, FileText, Shirt, Heart } from 'lucide-react';
 import Geospatial from './pages/Geospatial';
 import Demografi from './pages/Demografi';
@@ -112,11 +112,6 @@ function Home() {
 }
 
 function AppContent({ restartToken, handleRestartPage }) {
-  const location = useLocation();
-
-  const hideOn = ['/geospatial', '/demografi', '/registrasi', '/seragam', '/berkebutuhan'];
-  const hideHeader = hideOn.some((p) => location.pathname.startsWith(p));
-
   return (
     <div className="flex flex-col h-screen w-screen font-sans bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <main className="flex-1 bg-white overflow-hidden">

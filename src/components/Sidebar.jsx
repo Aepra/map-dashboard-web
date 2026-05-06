@@ -18,10 +18,6 @@ const Sidebar = ({
   activePage = 'geospatial',
   onNavigate = () => {},
 }) => {
-  const activeButtonStyle = {
-    backgroundColor: 'rgb(182, 32, 37)',
-  };
-
   const getIcon = (page, darkIcon, lightIcon) => (activePage === page ? lightIcon : darkIcon);
 
   return (

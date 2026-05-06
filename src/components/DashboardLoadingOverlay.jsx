@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const DashboardLoadingOverlay = ({ title = 'Memuat Dashboard', message = 'Mohon tunggu sebentar...', fullScreen = true }) => {
   return (
     <div className={`${fullScreen ? 'fixed' : 'absolute'} inset-0 z-50 flex items-center justify-center bg-white/88 backdrop-blur-sm`}>

@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+
+const EMPTY_JENJANG = {};
 
 /**
  * Control Panel - Minimalist Filter UI
@@ -13,7 +15,6 @@ export const ControlPanel = ({
   totalCount,
 }) => {
   const [showJenjangDropdown, setShowJenjangDropdown] = useState(false);
-  const safeCheckedJenjang = checkedJenjang || {};
 
   const handleCheckboxChange = (jenjang) => {
     setCheckedJenjang((prev) => ({
@@ -23,15 +24,15 @@ export const ControlPanel = ({
   };
 
   const selectedLabel = useMemo(() => {
-    const selected = Object.entries(safeCheckedJenjang)
-      .filter(([_, checked]) => checked)
+    const selected = Object.entries(checkedJenjang || EMPTY_JENJANG)
+      .filter(([, checked]) => checked)
       .map(([jenjang]) => jenjang);
 
     if (selected.length === 3) return 'Semua';
     if (selected.length === 0) return 'Tidak ada';
     if (selected.length === 1) return selected[0];
     return selected.join(' + ');
-  }, [safeCheckedJenjang]);
+  }, [checkedJenjang]);
 
   return (
     <div className="bg-white/95 rounded-lg shadow-lg backdrop-blur-sm w-80 border border-slate-200 overflow-hidden">
@@ -64,7 +65,7 @@ export const ControlPanel = ({
             <label key={jenjang} className="flex items-center gap-3 cursor-pointer hover:bg-blue-50 p-2 rounded-md transition">
               <input
                 type="checkbox"
-                checked={!!safeCheckedJenjang[jenjang]}
+                checked={!!(checkedJenjang || EMPTY_JENJANG)[jenjang]}
                 onChange={() => handleCheckboxChange(jenjang)}
                 className="w-4 h-4 cursor-pointer accent-blue-600 rounded"
               />

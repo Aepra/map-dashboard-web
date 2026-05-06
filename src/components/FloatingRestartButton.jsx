@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export const FloatingRestartButton = ({ onRestart = () => {} }) => {
   const [spinKey, setSpinKey] = useState(0);

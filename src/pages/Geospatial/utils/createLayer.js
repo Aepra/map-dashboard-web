@@ -149,7 +149,6 @@ export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent)
   // Determine zoom level and config
   const zoomLevels = LAYER_CONFIG.zoomLevels;
   let zoomLevel = zoomLevels.veryFar;
-  let isDetailedView = true;
 
   if (zoom >= 14) {
     zoomLevel = zoomLevels.close;
@@ -160,7 +159,6 @@ export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent)
   } else {
     // Very far zoom - might want to show aggregated points
     zoomLevel = zoomLevels.veryFar;
-    isDetailedView = false;
   }
 
   // Apply viz mode adjustments
@@ -238,7 +236,6 @@ export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent)
 export const createSchoolLayer = (schoolData, zoom, onSelectSchool) => {
   // School layer visibility thresholds
   const shouldShow = zoom >= 9.5; // Show schools earlier for better context
-  const isDetailedView = zoom >= 12;
 
   const getSize = () => getSchoolIconSize(zoom);
 
@@ -310,11 +307,6 @@ export const createLineLayer = (selectedStudent, schoolData, zoom = 0) => {
     if (zoom < 10) return 0.5;
     if (zoom < 12) return 0.65;
     return 0.8;
-  };
-
-  // Gradient effect: fade at ends for smooth visual
-  const getStrokeStyle = () => {
-    return zoom >= 12 ? 'solid' : 'solid';
   };
 
   return new LineLayer({

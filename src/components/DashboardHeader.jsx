@@ -1,5 +1,3 @@
-import React from 'react';
-
 const buttonStyle = {
   padding: '8px 12px',
   borderRadius: '8px',

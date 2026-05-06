@@ -68,11 +68,6 @@ const downloadFile = () => {
       }
 
       const fileStream = fs.createWriteStream(OUTPUT_PATH);
-      let downloadedBytes = 0;
-
-      response.on('data', (chunk) => {
-        downloadedBytes += chunk.length;
-      });
 
       response.pipe(fileStream);
 

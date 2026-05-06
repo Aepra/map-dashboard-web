@@ -29,7 +29,7 @@ export async function getDuckDBConnection() {
 
 export async function registerParquetIfNeeded() {
   if (parquetRegistered) return;
-  const conn = await getDuckDBConnection();
+  await getDuckDBConnection();
   try {
     // Try local file first
     const localPath = '/data/peta_murid.parquet';

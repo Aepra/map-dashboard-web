@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * Error Overlay - ditampilkan saat terjadi error saat loading data
  */

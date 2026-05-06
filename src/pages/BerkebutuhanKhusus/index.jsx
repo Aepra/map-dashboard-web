@@ -1,4 +1,3 @@
-import React from 'react';
 import { useEffect, useState } from 'react';
 import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
 import FloatingRestartButton from '../../components/FloatingRestartButton';
@@ -7,7 +6,8 @@ export const BerkebutuhanKhusus = ({ restartKey = 0, onRestart = () => {} }) => 
   const [iframeLoading, setIframeLoading] = useState(true);
 
   useEffect(() => {
-    setIframeLoading(true);
+    const loadingTimer = setTimeout(() => setIframeLoading(true), 0);
+    return () => clearTimeout(loadingTimer);
   }, [restartKey]);
 
   return (

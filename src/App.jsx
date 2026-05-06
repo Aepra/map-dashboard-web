@@ -1,34 +1,111 @@
 
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { MapPin, Users, FileText, Shirt, Heart } from 'lucide-react';
 import Geospatial from './pages/Geospatial';
 import Demografi from './pages/Demografi';
 import Registrasi from './pages/Registrasi';
 import SeragamGratis from './pages/SeragamGratis';
 import BerkebutuhanKhusus from './pages/BerkebutuhanKhusus';
+import EmbedItem from './components/EmbedItem';
 
 function Home() {
-  const cards = [
-    { to: '/geospatial', title: 'Geospatial' },
-    { to: '/demografi', title: 'Demografi' },
-    { to: '/registrasi', title: 'Registrasi' },
-    { to: '/seragam', title: 'Seragam Gratis' },
-    { to: '/berkebutuhan', title: 'Berkebutuhan Khusus' }
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com';
+
+  const dashboards = [
+    {
+      title: 'Geospatial',
+      description: 'Peta peserta berdasarkan lokasi geografis',
+      path: '/geospatial',
+      embedUrl: `${baseUrl}/geospatial`,
+      icon: MapPin,
+      color: 'from-blue-500 to-blue-600',
+      lightColor: 'bg-blue-50',
+      accentColor: 'text-blue-600',
+    },
+    {
+      title: 'Demografi',
+      description: 'Data demografis peserta SPMB',
+      path: '/demografi',
+      embedUrl: `${baseUrl}/demografi`,
+      icon: Users,
+      color: 'from-green-500 to-green-600',
+      lightColor: 'bg-green-50',
+      accentColor: 'text-green-600',
+    },
+    {
+      title: 'Registrasi',
+      description: 'Data pendaftaran peserta',
+      path: '/registrasi',
+      embedUrl: `${baseUrl}/registrasi`,
+      icon: FileText,
+      color: 'from-red-500 to-red-600',
+      lightColor: 'bg-red-50',
+      accentColor: 'text-red-600',
+    },
+    {
+      title: 'Seragam Gratis',
+      description: 'Program pemberian seragam',
+      path: '/seragam',
+      embedUrl: `${baseUrl}/seragam`,
+      icon: Shirt,
+      color: 'from-amber-500 to-amber-600',
+      lightColor: 'bg-amber-50',
+      accentColor: 'text-amber-600',
+    },
+    {
+      title: 'Berkebutuhan Khusus',
+      description: 'Data peserta dengan kebutuhan khusus',
+      path: '/berkebutuhan',
+      embedUrl: `${baseUrl}/berkebutuhan`,
+      icon: Heart,
+      color: 'from-purple-500 to-purple-600',
+      lightColor: 'bg-purple-50',
+      accentColor: 'text-purple-600',
+    },
   ];
 
   return (
-    <div className="p-8 w-full h-full overflow-auto bg-gray-50">
-      <h1 className="text-2xl font-semibold mb-4">Dashboard Utama</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards.map((c) => (
-          <NavLink
-            to={c.to}
-            key={c.to}
-            className="block p-6 bg-white rounded shadow hover:shadow-md transition text-center"
-          >
-            <div className="text-lg font-medium">{c.title}</div>
-          </NavLink>
-        ))}
+    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-8 py-12">
+          {/* Header */}
+          <div className="mb-16">
+            <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+              SPMB Dashboards
+            </h1>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              Klik untuk buka dashboard, atau salin URL untuk embed ke website Anda
+            </p>
+          </div>
+
+          {/* Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            {dashboards.map((dashboard) => {
+              const Icon = dashboard.icon;
+              return (
+                <EmbedItem
+                  key={dashboard.path}
+                  title={dashboard.title}
+                  description={dashboard.description}
+                  path={dashboard.path}
+                  embedUrl={dashboard.embedUrl}
+                  icon={Icon}
+                  color={dashboard.color}
+                  lightColor={dashboard.lightColor}
+                  accentColor={dashboard.accentColor}
+                />
+              );
+            })}
+          </div>
+
+          {/* Footer */}
+          <div className="pt-8 border-t border-gray-200/50">
+            <p className="text-sm text-gray-500">
+              SPMB Dashboard · Powered by Map System
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -40,33 +117,8 @@ function AppContent({ restartToken, handleRestartPage }) {
   const hideOn = ['/geospatial', '/demografi', '/registrasi', '/seragam', '/berkebutuhan'];
   const hideHeader = hideOn.some((p) => location.pathname.startsWith(p));
 
-  const linkClass = ({ isActive }) =>
-    `px-3 py-2 rounded ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`;
-
   return (
-    <div className="flex flex-col h-screen w-screen font-sans">
-      {!hideHeader && (
-        <header className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="text-lg font-semibold">SPMB Dashboard</div>
-            <nav className="flex gap-2">
-              <NavLink to="/" className={linkClass} end>
-                Home
-              </NavLink>
-              <NavLink to="/geospatial" className={linkClass}>
-                Geospatial
-              </NavLink>
-              <NavLink to="/demografi" className={linkClass}>
-                Demografi
-              </NavLink>
-              <NavLink to="/registrasi" className={linkClass}>
-                Registrasi
-              </NavLink>
-            </nav>
-          </div>
-        </header>
-      )}
-
+    <div className="flex flex-col h-screen w-screen font-sans bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <main className="flex-1 bg-white overflow-hidden">
         <Routes>
           <Route path="/" element={<Home />} />

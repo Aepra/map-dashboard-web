@@ -1,6 +1,6 @@
 import React from 'react';
-import DashboardHeader from '../../components/DashboardHeader';
 import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
+import FloatingRestartButton from '../../components/FloatingRestartButton';
 import { useEffect, useState } from 'react';
 
 export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
@@ -21,8 +21,7 @@ export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
         background: '#f9fafb'
       }}
     >
-      <DashboardHeader title="Dashboard Registrasi SPMB 2025" onRestart={onRestart} />
-
+      <FloatingRestartButton onRestart={onRestart} />
       {/* Scroll container */}
       <div
         style={{

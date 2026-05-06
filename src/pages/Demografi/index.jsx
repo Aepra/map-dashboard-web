@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import DashboardHeader from '../../components/DashboardHeader';
 import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
+import FloatingRestartButton from '../../components/FloatingRestartButton';
 
 export const Demografi = ({ restartKey = 0, onRestart = () => {} }) => {
   const [iframeLoading, setIframeLoading] = useState(true);
@@ -21,8 +21,7 @@ export const Demografi = ({ restartKey = 0, onRestart = () => {} }) => {
         background: '#f9fafb'
       }}
     >
-      <DashboardHeader title="Dashboard Demografi" onRestart={onRestart} />
-
+      <FloatingRestartButton onRestart={onRestart} />
       {/* Scroll container */}
       <div
         style={{

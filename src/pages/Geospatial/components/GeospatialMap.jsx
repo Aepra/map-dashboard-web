@@ -118,6 +118,7 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
   const [topBarHeight, setTopBarHeight] = useState(96);
+  const [hoveredHeaderItem, setHoveredHeaderItem] = useState(null);
   const topBarRef = useRef(null);
 
   useEffect(() => {
@@ -130,6 +131,7 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
   const isTablet = viewportWidth <= 1024 && viewportWidth > 768;
   const isResponsiveLayout = isMobile || isTablet;
   const isCompactHeader = isResponsiveLayout;
+  const isHeaderStacked = topBarHeight > (isMobile ? 180 : isTablet ? 150 : 128);
 
   useEffect(() => {
     if (!topBarRef.current) return;
@@ -149,16 +151,51 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
 
   const responsiveSelectStyle = {
     ...selectDropdownStyle,
-    minWidth: isMobile ? '100%' : isTablet ? '128px' : '148px',
-    width: isMobile ? '100%' : 'auto',
-    padding: isMobile ? '8px 10px' : isTablet ? '9px 12px' : '10px 14px',
-    fontSize: isMobile ? 13 : 14,
+    minWidth: 0,
+    width: '100%',
+    padding: isMobile ? '4px 6px' : isTablet ? '5px 7px' : '5px 8px',
+    fontSize: isMobile ? 11 : 12,
+    boxSizing: 'border-box',
+    borderRadius: 8,
+    background: '#fff',
+    border: '1px solid rgba(148, 163, 184, 0.16)',
+    boxShadow: 'none',
   };
 
   const responsiveLabelStyle = {
     ...labelStyle,
-    fontSize: isMobile ? 11 : 12,
-    letterSpacing: isMobile ? '0.3px' : '0.4px',
+    fontSize: isMobile ? 9 : 10,
+    letterSpacing: isMobile ? '0.12px' : '0.18px',
+    lineHeight: 1.1,
+    color: '#475569',
+  };
+
+  const filterItemStyle = (accent = 'blue') => {
+    const accentMap = {
+      blue: '#3b82f6',
+      green: '#22c55e',
+      amber: '#f59e0b',
+      purple: '#a855f7',
+    };
+    const accentColor = accentMap[accent] || '#3b82f6';
+    const isHovered = hoveredHeaderItem === accent;
+
+    return {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      width: isMobile ? 'calc(50% - 8px)' : isTablet ? '160px' : '150px',
+      minWidth: isMobile ? 'calc(50% - 8px)' : isTablet ? '160px' : '150px',
+      flex: isMobile ? '1 1 calc(50% - 8px)' : isTablet ? '0 0 160px' : '0 0 150px',
+      gap: isMobile ? 2 : 3,
+      padding: isMobile ? '4px 5px' : '5px 7px',
+      border: 'none',
+      borderRadius: 10,
+      background: '#fff',
+      boxShadow: isHovered ? `inset 0 -2px 0 ${accentColor}` : 'none',
+      boxSizing: 'border-box',
+      transition: 'box-shadow 0.18s ease, background 0.18s ease',
+    };
   };
 
   // Keep zoom updates lightweight to avoid re-render storms while panning.
@@ -396,13 +433,12 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
       alignItems: 'center',
       justifyContent: 'flex-start',
       flexWrap: 'wrap',
-      padding: isMobile ? '10px 12px' : isTablet ? '12px 18px' : '16px 24px 16px 24px',
-      paddingRight: isMobile ? '12px' : isTablet ? '18px' : '188px',
-      background: 'linear-gradient(to right, #ffffff 0%, #fafbfc 100%)',
-      borderBottom: '1px solid #e2e8f0',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+      padding: isMobile ? '10px 12px' : isTablet ? '12px 18px' : '16px 24px',
+      background: '#fff',
+      borderBottom: 'none',
+      boxShadow: 'none',
       zIndex: 10,
-      gap: isMobile ? 10 : 14,
+      gap: isMobile ? 5 : 7,
       position: 'absolute',
       top: 0,
       left: 0,
@@ -419,22 +455,20 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
       {/* Right logo moves to top on tablet/mobile - now only a single combined image */}
       <div style={{
         order: isCompactHeader ? 0 : 3,
-        position: isCompactHeader ? 'static' : 'absolute',
-        right: isCompactHeader ? 'auto' : 24,
-        top: isCompactHeader ? 'auto' : '50%',
-        transform: isCompactHeader ? 'none' : 'translateY(-50%)',
+        position: 'static',
         marginLeft: isCompactHeader ? 0 : 'auto',
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        flex: isCompactHeader ? '1 1 100%' : '0 0 auto',
+        flex: isCompactHeader ? '0 1 100%' : '0 1 160px',
         width: isCompactHeader ? '100%' : 'auto',
         zIndex: 12,
+        minWidth: 56,
       }}>
         <img
           src={logoColor}
           alt="SPMB Disdik Makassar 2026"
-          style={{ width: isMobile ? 88 : isTablet ? 112 : 156, height: 'auto', objectFit: 'contain', display: 'block' }}
+          style={{ width: '100%', maxWidth: isHeaderStacked ? (isMobile ? 86 : isTablet ? 112 : 130) : isMobile ? 96 : isTablet ? 140 : 188, height: 'auto', objectFit: 'contain', display: 'block', transition: 'max-width 0.25s ease' }}
         />
       </div>
 
@@ -442,12 +476,15 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
       <div style={{
         position: 'relative',
         order: 1,
-        flex: isCompactHeader ? '1 1 100%' : '1 1 360px',
-        maxWidth: isMobile ? '100%' : '480px',
-        minWidth: isMobile ? 0 : '220px',
+        flex: isCompactHeader ? '1 1 100%' : '1 1 200px',
+        maxWidth: isMobile ? '100%' : '420px',
+        minWidth: isMobile ? 0 : '120px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, padding: isMobile ? '9px 10px' : '11px 13px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: 12, boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}>
-          <span style={{ fontSize: isMobile ? 13 : 15, lineHeight: 1, color: '#94a3b8' }}>⌕</span>
+        <div style={{ fontSize: isMobile ? 9 : 10, fontWeight: 700, color: '#475569', letterSpacing: isMobile ? '0.12px' : '0.2px', marginBottom: 5, textTransform: 'uppercase' }}>
+          Cari sekolah / ID peserta
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 5 : 7, padding: isMobile ? '5px 7px' : '6px 9px', background: '#fff', border: '1px solid rgba(148, 163, 184, 0.14)', borderRadius: 10, boxShadow: hoveredHeaderItem === 'search' ? 'inset 0 -2px 0 #3b82f6' : 'none', transition: 'box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease' }} onMouseEnter={() => setHoveredHeaderItem('search')} onMouseLeave={() => setHoveredHeaderItem(null)}>
+          <span style={{ fontSize: isMobile ? 13 : 15, lineHeight: 1, color: '#2563eb' }}>⌕</span>
           <input
             type="text"
             value={searchTerm}
@@ -465,8 +502,8 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
               minWidth: 0,
               border: 'none',
               outline: 'none',
-              fontSize: isMobile ? 13 : 15,
-              color: '#0f172a',
+              fontSize: isMobile ? 12 : 13,
+              color: '#1e293b',
               background: 'transparent',
             }}
           />
@@ -476,16 +513,16 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
               onClick={clearSearch}
               style={{
                 border: 'none',
-                background: '#f8fafc',
-                color: '#475569',
+                background: '#eef2ff',
+                color: '#2563eb',
                 borderRadius: 999,
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                fontSize: isMobile ? 14 : 16,
+                fontSize: isMobile ? 12 : 13,
                 fontWeight: 700,
               }}
               aria-label="Clear search"
@@ -497,10 +534,10 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
         </div>
 
         {isSearchOpen && searchTerm.trim() && (
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(100% + 8px)', zIndex: 20, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 16px 40px rgba(15, 23, 42, 0.12)', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(100% + 6px)', zIndex: 20, background: '#fff', border: '1px solid rgba(148, 163, 184, 0.12)', borderRadius: 10, boxShadow: '0 8px 20px rgba(15, 23, 42, 0.03)', overflow: 'hidden' }}>
             <div style={{ maxHeight: 240, overflowY: 'auto' }}>
               {searchResults.length === 0 ? (
-                <div style={{ padding: '12px 14px', fontSize: 13, color: '#64748b' }}>Tidak ada hasil.</div>
+                <div style={{ padding: '10px 12px', fontSize: 12, color: '#64748b' }}>Tidak ada hasil.</div>
               ) : (
                 searchResults.map((result) => (
                   <button
@@ -513,15 +550,18 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 8,
-                      padding: '12px 14px',
+                      padding: '8px 12px',
                       border: 'none',
-                      borderBottom: '1px solid #f1f5f9',
+                      borderBottom: 'none',
                       background: 'white',
                       cursor: 'pointer',
                       textAlign: 'left',
+                      transition: 'background 0.15s ease',
                     }}
+                    onMouseEnter={(event) => { event.currentTarget.style.background = '#eff6ff'; }}
+                    onMouseLeave={(event) => { event.currentTarget.style.background = 'white'; }}
                   >
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', lineHeight: 1.35 }}>{result.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: '#0f172a', lineHeight: 1.25 }}>{result.label}</span>
                   </button>
                 ))
               )}
@@ -534,14 +574,18 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
       <div style={{
         display: 'flex',
         order: 2,
-        gap: isMobile ? 10 : 10,
+        gap: isMobile ? 5 : 7,
         alignItems: 'center',
         flexWrap: 'wrap',
         minWidth: 0,
-        flex: isCompactHeader ? '1 1 100%' : '1 1 600px',
-        marginLeft: isCompactHeader ? 0 : 200,
+        flex: isCompactHeader ? '1 1 100%' : '1 1 auto',
+        marginLeft: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 8, flex: isMobile ? '1 1 calc(50% - 10px)' : isTablet ? '1 1 calc(50% - 12px)' : '0 1 auto', minWidth: isMobile ? 'calc(50% - 10px)' : isTablet ? 'calc(50% - 12px)' : 'auto' }}>
+        <div
+          style={filterItemStyle('blue')}
+          onMouseEnter={() => setHoveredHeaderItem('blue')}
+          onMouseLeave={() => setHoveredHeaderItem(null)}
+        >
           <label style={responsiveLabelStyle}>Jalur ({metrics.jalurCounts?.[selectedJalur] || 0})</label>
           <select
             value={selectedJalur}
@@ -555,7 +599,11 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 8, flex: isMobile ? '1 1 calc(50% - 10px)' : isTablet ? '1 1 calc(50% - 12px)' : '0 1 auto', minWidth: isMobile ? 'calc(50% - 10px)' : isTablet ? 'calc(50% - 12px)' : 'auto' }}>
+        <div
+          style={filterItemStyle('green')}
+          onMouseEnter={() => setHoveredHeaderItem('green')}
+          onMouseLeave={() => setHoveredHeaderItem(null)}
+        >
           <label style={responsiveLabelStyle}>Jenjang</label>
           <select
             value={selectedJenjang}
@@ -569,7 +617,11 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 8, flex: isMobile ? '1 1 calc(50% - 10px)' : isTablet ? '1 1 calc(50% - 12px)' : '0 1 auto', minWidth: isMobile ? 'calc(50% - 10px)' : isTablet ? 'calc(50% - 12px)' : 'auto' }}>
+        <div
+          style={filterItemStyle('amber')}
+          onMouseEnter={() => setHoveredHeaderItem('amber')}
+          onMouseLeave={() => setHoveredHeaderItem(null)}
+        >
           <label style={responsiveLabelStyle}>Status ({metrics.statusCounts?.[selectedStatus] || 0})</label>
           <select
             value={selectedStatus}
@@ -583,7 +635,11 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 4 : 8, flex: isMobile ? '1 1 calc(50% - 10px)' : isTablet ? '1 1 calc(50% - 12px)' : '0 1 auto', minWidth: isMobile ? 'calc(50% - 10px)' : isTablet ? 'calc(50% - 12px)' : 'auto' }}>
+        <div
+          style={filterItemStyle('purple')}
+          onMouseEnter={() => setHoveredHeaderItem('purple')}
+          onMouseLeave={() => setHoveredHeaderItem(null)}
+        >
           <label style={responsiveLabelStyle}>Mode</label>
           <select
             value={vizMode}
@@ -600,7 +656,7 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
   );
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', background: '#FAFBFC' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', background: 'linear-gradient(135deg, #f9fafb 0%, #ffffff 50%, #f9fafb 100%)' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }}>
         {topBar}
       </div>
@@ -623,14 +679,14 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
           width: isMobile ? 42 : 46,
           height: isMobile ? 26 : 28,
           borderRadius: '0 0 10px 10px',
-          border: '1px solid #e2e8f0',
+          border: '1px solid rgba(148, 163, 184, 0.18)',
           borderTop: 'none',
           background: '#fff',
-          color: 'rgb(182, 32, 37)',
+          color: '#2563eb',
           fontSize: isMobile ? 13 : 15,
           fontWeight: 800,
           cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.06)',
           zIndex: 25,
           transition: 'top 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.18s ease',
         }}
@@ -675,10 +731,10 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
           width: isMobile ? 132 : isTablet ? 148 : 176,
           padding: isMobile ? 6 : isTablet ? 7 : 8,
           borderRadius: isMobile ? 12 : 16,
-          border: '1px solid #e2e8f0',
-          background: 'rgba(255,255,255,0.96)',
+          border: 'none',
+          background: '#fff',
           backdropFilter: 'blur(10px)',
-          boxShadow: '0 10px 26px rgba(15, 23, 42, 0.10)',
+          boxShadow: 'none',
           transition: 'right 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
           overflow: 'visible',
           display: 'flex',
@@ -699,17 +755,19 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
             width: isMobile ? 26 : 32,
             height: isMobile ? 26 : 32,
             borderRadius: 999,
-            border: '1px solid #e2e8f0',
+            border: 'none',
             background: '#fff',
-            color: '#0f172a',
+            color: '#3b82f6',
             fontSize: isMobile ? 12 : 14,
             fontWeight: 800,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)',
+            boxShadow: hoveredHeaderItem === 'drawer-toggle' ? 'inset 0 -2px 0 #3b82f6' : 'none',
           }}
+          onMouseEnter={() => setHoveredHeaderItem('drawer-toggle')}
+          onMouseLeave={() => setHoveredHeaderItem(null)}
         >
           <ChevronIcon direction={showSatelliteDrawer ? 'left' : 'right'} />
         </button>
@@ -729,8 +787,8 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
             gap: isMobile ? 3 : isTablet ? 4 : 6,
             padding: isMobile ? '5px 4px' : isTablet ? '6px 5px' : '8px 6px',
             borderRadius: isMobile ? 8 : 10,
-            border: isSatellite ? '1px solid #e2e8f0' : '2px solid #0ea5e9',
-            background: isSatellite ? '#fff' : '#ecf8ff',
+            border: isSatellite ? '1px solid rgba(148, 163, 184, 0.12)' : '1px solid rgba(59, 130, 246, 0.12)',
+            background: isSatellite ? 'rgba(255,255,255,0.96)' : 'rgba(239,246,255,0.96)',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
           }}
@@ -754,8 +812,8 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
             gap: isMobile ? 3 : isTablet ? 4 : 6,
             padding: isMobile ? '5px 4px' : isTablet ? '6px 5px' : '8px 6px',
             borderRadius: isMobile ? 8 : 10,
-            border: isSatellite ? '2px solid #0f172a' : '1px solid #e2e8f0',
-            background: isSatellite ? '#f0f4f8' : '#fff',
+            border: isSatellite ? '1px solid rgba(37, 99, 235, 0.16)' : '1px solid rgba(148, 163, 184, 0.12)',
+            background: isSatellite ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.96)',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
           }}

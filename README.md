@@ -1,23 +1,16 @@
-# 🗺️ Map Dashboard Web - SPMB Analytics Platform
+# Map Dashboard Web
 
-[![React](https://img.shields.io/badge/React-19.2-blue?logo=react)](https://react.dev)
-[![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?logo=vite)](https://vitejs.dev)
-[![License](https://img.shields.io/badge/License-MIT-green)](#license)
-[![Node](https://img.shields.io/badge/Node-18+-green?logo=node.js)](https://nodejs.org)
+Dashboard untuk visualisasi data SPMB. Aplikasi ini menampilkan beberapa dashboard berbeda sesuai kebutuhan.
 
-Platform dashboard interaktif untuk visualisasi dan analisis data **SPMB (Sistem Penerimaan Mahasiswa Berbasis)** dengan fokus pada geospasial, demografi, registrasi, dan manajemen program khusus. Aplikasi dibangun dengan arsitektur modern menggunakan SQL in-browser dan WebGL rendering.
+## Fitur
 
-## ✨ Fitur Utama
-
-- **🗺️ Geospatial Dashboard** - Visualisasi peserta berdasarkan lokasi geografis dengan peta interaktif
-- **👥 Demografi Analytics** - Analisis data demografis peserta secara real-time
-- **📋 Registrasi Tracking** - Monitor data pendaftaran peserta SPMB
-- **👕 Seragam Gratis** - Distribusi dan manajemen program pemberian seragam
-- **❤️ Kebutuhan Khusus** - Dashboard khusus untuk peserta dengan kebutuhan khusus
-- **⚡ In-Browser SQL** - Query data menggunakan DuckDB tanpa backend
-- **📱 Responsive Design** - Optimized untuk desktop dan tablet
-- **🔌 Embed Support** - Mudah di-embed ke website eksternal
-- **🚀 Real-time Updates** - Auto-update data via scheduled tasks
+- Geospatial - Visualisasi peserta berdasarkan lokasi
+- Demografi - Analisis data demografis peserta
+- Registrasi - Monitor data pendaftaran
+- Seragam Gratis - Program pemberian seragam
+- Kebutuhan Khusus - Data peserta dengan kebutuhan khusus
+- Query di browser - Menggunakan DuckDB
+- Bisa di-embed ke website
 
 ## 🛠️ Tech Stack
 

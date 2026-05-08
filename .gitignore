@@ -21,6 +21,12 @@ dist-ssr
 # (Removed exclusion rule: public/data/*.parquet)
 # public/data/.gitkeep is still tracked
 
+# Internal/Sensitive Documentation
+INTERNAL.md
+*.internal.*
+secrets/
+.credentials
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,0 +1,45 @@
+# Internal Documentation
+
+⚠️ **CONFIDENTIAL** - Untuk tim internal saja. JANGAN di-push ke public repository.
+
+---
+
+## Database Connection
+
+### Production
+```
+Host: [REDACTED]
+Port: [REDACTED]
+Database: [REDACTED]
+```
+
+## Data Schema
+
+### Tables dengan Sensitive Fields
+- peserta (nama, alamat, nomor_identitas, kontak)
+- kebutuhan_khusus (kondisi_detail)
+- keuangan (status_pembayaran, catatan_finansial)
+
+## API Endpoints
+
+[dokumentasi internal]
+
+## Team Contacts
+
+[internal contacts]
+
+## Security Measures
+
+[detail keamanan]
+
+## Deployment Procedures
+
+[internal deployment steps]
+
+---
+
+Dokumentasi ini HARUS:
+1. Di-add ke .gitignore
+2. Disimpan di secure location (Google Drive, private wiki, dll)
+3. Accessible hanya untuk authorized team members
+4. Updated sesuai dengan security policies

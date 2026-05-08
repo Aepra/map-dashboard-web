@@ -12,35 +12,35 @@ Dashboard untuk visualisasi data SPMB. Aplikasi ini menampilkan beberapa dashboa
 - Query di browser - Menggunakan DuckDB
 - Bisa di-embed ke website
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| **React** | 19.2 | UI Framework |
-| **Vite** | 8.0 | Build tool & dev server |
-| **React Router** | 7.14 | Client-side routing |
-| **Tailwind CSS** | 4.2 | Styling |
-| **Lucide React** | 1.14 | Icon library |
+| React | 19.2 | UI Framework |
+| Vite | 8.0 | Build tool & dev server |
+| React Router | 7.14 | Client-side routing |
+| Tailwind CSS | 4.2 | Styling |
+| Lucide React | 1.14 | Icon library |
 
 ### Data & Visualization
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| **Deck.gl** | 9.3 | WebGL-based visualization |
-| **MapLibre GL** | 5.24 | Map rendering |
-| **React Map GL** | 8.1 | React wrapper untuk MapLibre |
-| **DuckDB Wasm** | 1.33 | In-browser SQL engine |
-| **Apache Arrow** | 20.0 | Columnar data format |
+| Deck.gl | 9.3 | WebGL-based visualization |
+| MapLibre GL | 5.24 | Map rendering |
+| React Map GL | 8.1 | React wrapper untuk MapLibre |
+| DuckDB Wasm | 1.33 | In-browser SQL engine |
+| Apache Arrow | 20.0 | Columnar data format |
 
 ### Development
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| **ESLint** | 10.2 | Code linting |
-| **PostCSS** | 8.5 | CSS processing |
-| **Tailwind** | 4.2 | Utility-first CSS |
-| **Node Cron** | 4.2 | Task scheduling |
+| ESLint | 10.2 | Code linting |
+| PostCSS | 8.5 | CSS processing |
+| Tailwind | 4.2 | Utility-first CSS |
+| Node Cron | 4.2 | Task scheduling |
 
-## 📁 Struktur Proyek
+## Struktur Proyek
 
 ```
 map-dashboard-web/
@@ -98,39 +98,39 @@ map-dashboard-web/
 
 ```
 
-## 🚀 Mulai Cepat
+## Mulai Cepat
 
 ### Prerequisites
-- **Node.js**: ≥ 18.x
-- **npm**: ≥ 9.x atau **yarn** / **pnpm**
+- Node.js: ≥ 18.x
+- npm: ≥ 9.x atau yarn / pnpm
 - Git
 
 ### Installation
 
-1. **Clone repository**
+1. Clone repository
 ```bash
 git clone <repository-url>
 cd map-dashboard-web
 ```
 
-2. **Install dependencies**
+2. Install dependencies
 ```bash
 npm install
 ```
 
-3. **Download data files** (opsional, jika ingin data terbaru)
+3. Download data files (opsional, jika ingin data terbaru)
 ```bash
 npm run download-data
 ```
 
-4. **Start development server**
+4. Start development server
 ```bash
 npm run dev
 ```
 
-Aplikasi akan tersedia di `http://localhost:5173`
+Aplikasi akan tersedia di http://localhost:5173
 
-## 📖 Penggunaan
+## Penggunaan
 
 ### Development Mode
 ```bash
@@ -168,7 +168,7 @@ npm run lint
 npm run lint -- --fix
 ```
 
-## 🏗️ Arsitektur
+## Arsitektur
 
 ### Data Flow
 
@@ -192,26 +192,26 @@ Parquet Files (public/data/*.parquet)
 
 ### Key Components
 
-#### **Geospatial Dashboard**
-- **GeospatialMap**: Renderer utama menggunakan Deck.gl dan MapLibre GL
-- **ControlPanel**: Filter interaktif untuk data peserta
-- **SchoolSearchPanel**: Search functionality untuk sekolah
-- **InfoPanel**: Detail informasi peserta terpilih
-- **Hooks**: Custom hooks untuk DuckDB queries dan data filtering
+#### Geospatial Dashboard
+- GeospatialMap: Renderer utama menggunakan Deck.gl dan MapLibre GL
+- ControlPanel: Filter interaktif untuk data peserta
+- SchoolSearchPanel: Search functionality untuk sekolah
+- InfoPanel: Detail informasi peserta terpilih
+- Hooks: Custom hooks untuk DuckDB queries dan data filtering
 
-#### **State Management**
+#### State Management
 Menggunakan React Hooks untuk state management:
-- `useDuckDBData` - Query dan cache data dari DuckDB
-- `useFilteredData` - Filter dan sort data berdasarkan kriteria
-- `useFilterMetrics` - Hitung metrics agregat
-- `useSchoolData` - Manage school-specific data
+- useDuckDBData - Query dan cache data dari DuckDB
+- useFilteredData - Filter dan sort data berdasarkan kriteria
+- useFilterMetrics - Hitung metrics agregat
+- useSchoolData - Manage school-specific data
 
-#### **Data Persistence**
-- **Parquet Format**: Efficient columnar data storage
-- **DuckDB Wasm**: SQL queries langsung di browser tanpa network round-trip
-- **Apache Arrow**: Zero-copy data interoperability
+#### Data Persistence
+- Parquet Format: Efficient columnar data storage
+- DuckDB Wasm: SQL queries langsung di browser tanpa network round-trip
+- Apache Arrow: Zero-copy data interoperability
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ### Build Docker Image
 ```bash
@@ -225,7 +225,7 @@ docker-compose up -d
 
 Lihat [DOCKER.md](./DOCKER.md) untuk detail lebih lanjut.
 
-## 📦 API Scripts
+## API Scripts
 
 ### downloadParquet.js
 Download Parquet files dari remote source dan simpan ke `public/data/`
@@ -248,7 +248,7 @@ Development startup script yang menjalankan Vite + data service
 node scripts/startup.js
 ```
 
-## 🔧 Konfigurasi
+## Konfigurasi
 
 ### Vite Configuration
 File: `vite.config.js`
@@ -266,7 +266,7 @@ File: `.eslintrc.js`
 - React recommended rules
 - React Hooks linting
 
-## 📝 Environment Variables
+## Environment Variables
 
 Buat file `.env.local` untuk environment-specific variables:
 
@@ -283,7 +283,7 @@ VITE_ENABLE_ANALYTICS=true
 VITE_ENABLE_AUTO_UPDATE=true
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Vercel
 Proyek sudah konfigurasi untuk Vercel (file: `vercel.json`)
@@ -300,21 +300,21 @@ npm run build
 
 Lihat [DEPLOY.md](./DEPLOY.md) untuk detail lengkap.
 
-## 📊 Performance
+## Performance
 
 ### Optimizations
-- ✅ Code splitting dengan React Router
-- ✅ Lazy loading untuk dashboard pages
-- ✅ DuckDB untuk efficient data querying
-- ✅ Deck.gl untuk performant WebGL rendering
-- ✅ Tailwind CSS untuk minimal CSS output
+- Code splitting dengan React Router
+- Lazy loading untuk dashboard pages
+- DuckDB untuk efficient data querying
+- Deck.gl untuk performant WebGL rendering
+- Tailwind CSS untuk minimal CSS output
 
 ### Metrics
 - Initial Load: < 2s
 - Time to Interactive: < 3s
 - Dashboard Load: < 1s (with cached data)
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### DuckDB Load Issues
 ```bash
@@ -334,7 +334,7 @@ npm run download-data
 npm run dev -- --port 3000
 ```
 
-## 📚 Documentation
+## Documentation
 
 - [Docker Guide](./DOCKER.md) - Containerization dan deployment
 - [Deployment Guide](./DEPLOY.md) - Production deployment
@@ -343,7 +343,7 @@ npm run dev -- --port 3000
 - [Deck.gl Docs](https://deck.gl)
 - [DuckDB Docs](https://duckdb.org)
 
-## 🤝 Contributing
+## Contributing
 
 Kontribusi sangat diterima! Berikut langkahnya:
 
@@ -359,17 +359,17 @@ Kontribusi sangat diterima! Berikut langkahnya:
 - Test sebelum submit PR
 - Update documentation
 
-## 📄 License
+## License
 
 Project ini dilisensikan di bawah [MIT License](./LICENSE).
 
-## 👥 Author
+## Author
 
 **Map System Team**
 - Website: [your-website.com](https://your-website.com)
 - Email: team@mapsystem.com
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Vite](https://vitejs.dev) - Next generation frontend tooling
 - [React](https://react.dev) - A JavaScript library for building user interfaces
@@ -380,4 +380,4 @@ Project ini dilisensikan di bawah [MIT License](./LICENSE).
 ---
 
 **Last Updated**: May 2026  
-**Status**: ✅ Production Ready
+**Status**: Production Ready

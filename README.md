@@ -2,6 +2,8 @@
 
 Dashboard untuk visualisasi data SPMB. Aplikasi ini menampilkan beberapa dashboard berbeda sesuai kebutuhan.
 
+**Live Demo**: https://map-dashboard-web-flame.vercel.app/
+
 ## Fitur
 
 - Geospatial - Visualisasi peserta berdasarkan lokasi
@@ -363,11 +365,10 @@ Kontribusi sangat diterima! Berikut langkahnya:
 
 Project ini dilisensikan di bawah [MIT License](./LICENSE).
 
-## Author
+## Contributors
 
-**Map System Team**
-- Website: [your-website.com](https://your-website.com)
-- Email: team@mapsystem.com
+- [Aepra](https://github.com/Aepra)
+- [RopReny](https://github.com/RopReny)
 
 ## Acknowledgments
 

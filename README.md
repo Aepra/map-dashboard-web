@@ -361,10 +361,6 @@ Kontribusi sangat diterima! Berikut langkahnya:
 - Test sebelum submit PR
 - Update documentation
 
-## License
-
-Project ini dilisensikan di bawah [MIT License](./LICENSE).
-
 ## Contributors
 
 - [Aepra](https://github.com/Aepra)

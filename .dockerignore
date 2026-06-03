@@ -10,5 +10,4 @@ build
 *.log
 .vscode
 .idea
-public/data/*.parquet
-public/data/download.log
+public/data/

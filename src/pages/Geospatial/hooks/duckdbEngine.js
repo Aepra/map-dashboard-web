@@ -1,7 +1,7 @@
 // duckdbEngine.js
 // Global singleton for DuckDB WASM, connection, and data cache
 import * as duckdb from '@duckdb/duckdb-wasm';
-import { DUCKDB_CONFIG, PARQUET_URL, PARQUET_URL_GITHUB } from '../utils/constants';
+import { DUCKDB_CONFIG, PARQUET_URL } from '../utils/constants';
 
 const globalCache = {
   db: null,
@@ -26,11 +26,9 @@ export async function initDuckDB() {
     await _db.instantiate(DUCKDB_CONFIG.mainModule);
     globalCache.db = _db;
     globalCache.conn = await _db.connect();
-    // Register parquet with robust fallback: local first, then GitHub.
-    // This protects runtime from corrupt local files (invalid parquet footer/header).
+    // Register parquet directly from the configured GCS URL.
     const parquetCandidates = [
-      { alias: 'data_local.parquet', url: PARQUET_URL },
-      { alias: 'data_remote.parquet', url: PARQUET_URL_GITHUB },
+      { alias: 'data_remote.parquet', url: PARQUET_URL },
     ];
 
     let activeParquetAlias = null;
@@ -50,7 +48,7 @@ export async function initDuckDB() {
     }
 
     if (!activeParquetAlias) {
-      throw new Error('Gagal memuat parquet dari local maupun GitHub source');
+      throw new Error('Gagal memuat parquet dari VITE_DATA_SOURCE_URL');
     }
 
     // Detect schema and columns (with flexible name mapping)

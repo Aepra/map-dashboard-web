@@ -1,135 +1,58 @@
-# 🚀 Deployment Guide
+# Deployment Guide
 
-## Setup Deployment Type
+Project ini memakai static pipeline: data diproses di BigQuery, diekspor ke GCS sebagai Parquet, lalu website membaca file Parquet itu langsung dari browser.
 
-Choose one deployment method:
+## Environment
 
-### **Option 1: Vercel (Cloud - Recommended for easy setup)**
+Set environment berikut di local dan deployment platform:
 
-**Setup:**
-
-1. **Update .env file:**
-```bash
-VITE_DEPLOY_TYPE=vercel
+```env
+VITE_DEPLOY_TYPE=remote
+VITE_DATA_SOURCE_URL=https://storage.googleapis.com/spmb-map-public/peta_murid_000000000000.parquet
 ```
 
-2. **Commit parquet data to git:**
+## GCS CORS
+
+Bucket GCS harus mengizinkan browser mengambil file Parquet:
+
 ```bash
-git add -f public/data/peta_murid.parquet
-git add .
-git commit -m "Prepare for Vercel deployment - include parquet data"
-git push
+echo '[{"origin": ["*"], "method": ["GET"], "responseHeader": ["Content-Type"], "maxAgeSeconds": 3600}]' > cors.json
+gcloud storage buckets update gs://spmb-map-public --cors-file=cors.json
 ```
 
-3. **Deploy to Vercel:**
-   - Go to [vercel.com](https://vercel.com)
-   - Connect GitHub repository
-   - Click "Deploy"
-   - Environment variables already configured via .env
+## BigQuery Scheduled Export
 
-**Result:** App + Data both served from Vercel CDN ✅
+Contoh scheduled query:
 
----
-
-### **Option 2: Self-Hosted Docker (Private - Better for sensitive data)**
-
-**Setup:**
-
-1. **Update .env file:**
-```bash
-VITE_DEPLOY_TYPE=self
-VITE_DATA_SOURCE_URL=https://raw.githubusercontent.com/Aepra/map-data-pipeline/main/data/peta_murid.parquet
+```sql
+EXPORT DATA OPTIONS(
+  uri='gs://spmb-map-public/peta_murid_*.parquet',
+  format='PARQUET',
+  overwrite=true
+) AS
+SELECT * FROM `your_project.rpt.Pendaftaran_Looker_func1`();
 ```
 
-2. **Keep parquet out of git (data downloads at runtime):**
-```bash
-# DON'T commit parquet file
-# .gitignore already configured
+Pastikan nama object final sesuai dengan `VITE_DATA_SOURCE_URL`:
+
+```text
+https://storage.googleapis.com/spmb-map-public/peta_murid_000000000000.parquet
 ```
 
-3. **Push to git:**
+## Deploy Website
+
 ```bash
-git add .
-git commit -m "Setup for self-hosted Docker deployment"
-git push
+npm run build
 ```
 
-4. **Deploy to your server:**
+Deploy folder `dist/` ke Vercel, Firebase Hosting, GCS static hosting, atau server static lain.
 
-   **Docker Compose:**
-   ```bash
-   docker-compose up --build
-   ```
+## Verify
 
-   **Manual Docker:**
-   ```bash
-   docker build -t map-dashboard .
-   docker run -p 5173:5173 map-dashboard
-   ```
+Di browser Network tab, request data Geospatial harus menuju:
 
-**Result:** Data downloads from GitHub at runtime, never stored in repo ✅
-
----
-
-## Environment Variables
-
-| Variable | Options | Description |
-|----------|---------|-------------|
-| `VITE_DEPLOY_TYPE` | `vercel` or `self` | Deployment type |
-| `VITE_DATA_SOURCE_URL` | URL string | Data source URL (for self-hosted) |
-
-**Default:**
-- `VITE_DEPLOY_TYPE=vercel` (fallback)
-- `VITE_DATA_SOURCE_URL=https://raw.githubusercontent.com/Aepra/map-data-pipeline/main/data/peta_murid.parquet`
-
----
-
-## Quick Deploy Commands
-
-### For Vercel:
-```bash
-# Prepare
-git add -f public/data/peta_murid.parquet
-git add .
-git commit -m "Deploy: Vercel"
-git push
-
-# Then go to vercel.com and click deploy
+```text
+https://storage.googleapis.com/spmb-map-public/peta_murid_000000000000.parquet
 ```
 
-### For Self-Hosted:
-```bash
-# Prepare
-git add .
-git commit -m "Deploy: Self-hosted"
-git push
-
-# Deploy
-docker-compose up --build
-```
-
----
-
-## Verify Deployment Type
-
-Check console or network tab:
-- **Vercel:** Data loaded from `/data/peta_murid.parquet`
-- **Self:** Data loaded from GitHub raw URL (network request visible)
-
----
-
-## Troubleshooting
-
-**Data not loading?**
-- Check environment variables are set
-- Check `.env` file exists in deployment environment
-- For Vercel: add env vars in Vercel Settings
-- For Docker: env vars pass via docker-compose or docker run -e
-
-**Parquet file missing?**
-- Vercel: Make sure `public/data/peta_murid.parquet` committed to git
-- Self: Make sure GitHub data URL is accessible
-
----
-
-**Ready to deploy? Choose option above and run the commands!** 🎯
+Tidak ada file Parquet yang perlu disimpan atau di-commit di repository ini.

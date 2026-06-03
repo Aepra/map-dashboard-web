@@ -11,14 +11,11 @@ RUN npm install --legacy-peer-deps
 # Copy source code
 COPY . .
 
-# Create data directory
-RUN mkdir -p public/data
-
 # Expose Vite dev server port
 EXPOSE 5173
 
 # Environment
 ENV NODE_ENV=development
 
-# Start complete startup process (download data + service + dev server)
+# Start dev server. Geospatial data is read from VITE_DATA_SOURCE_URL.
 CMD ["npm", "run", "dev"]

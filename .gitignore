@@ -17,9 +17,8 @@ dist-ssr
 .env.local
 .env.*.local
 
-# Parquet data files - INCLUDED for Vercel deployment
-# (Removed exclusion rule: public/data/*.parquet)
-# public/data/.gitkeep is still tracked
+# Generated/local data files are not stored in this project.
+public/data/
 
 # Internal/Sensitive Documentation
 INTERNAL.md

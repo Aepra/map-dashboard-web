@@ -8,9 +8,7 @@
     "dev:vite": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "download-data": "node scripts/downloadParquet.js",
-    "service:download": "node scripts/dataService.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.2",
@@ -21,7 +19,6 @@
     "apache-arrow": "^20.0.0",
     "lucide-react": "^1.14.0",
     "maplibre-gl": "^5.24.0",
-    "node-cron": "^4.2.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-map-gl": "^8.1.1",

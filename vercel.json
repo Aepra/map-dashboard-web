@@ -14,6 +14,15 @@
           "value": "frame-ancestors https://superapps.makassarkota.go.id http://localhost:* http://127.0.0.1:*;"
         }
       ]
+    },
+    {
+      "source": "/geospatial",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors https://superapps.makassarkota.go.id http://localhost:* http://127.0.0.1:* https://lookerstudio.google.com https://datastudio.google.com https://*.looker.com;"
+        }
+      ]
     }
   ],
   "buildCommand": "npm run build",

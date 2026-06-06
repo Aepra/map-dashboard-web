@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
 import FloatingRestartButton from '../../components/FloatingRestartButton';
 
-export const BerkebutuhanKhusus = ({ restartKey = 0, onRestart = () => {} }) => {
+export const Smp = ({ restartKey = 0, onRestart = () => {} }) => {
   const [iframeLoading, setIframeLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export const BerkebutuhanKhusus = ({ restartKey = 0, onRestart = () => {} }) => 
       >
         {iframeLoading && (
           <DashboardLoadingOverlay
-            title="Memuat Dashboard Berkebutuhan Khusus"
+            title="Memuat Dashboard Smp"
             message="Sedang menyiapkan tampilan dashboard..."
             fullScreen={false}
           />
@@ -45,7 +45,7 @@ export const BerkebutuhanKhusus = ({ restartKey = 0, onRestart = () => {} }) => 
         >
           <iframe
             key={restartKey}
-            src="https://datastudio.google.com/embed/reporting/618aa6b8-9cec-4fee-9950-80852e6c5d4f/page/p_vk3ts9ca3d"
+            src="https://datastudio.google.com/embed/reporting/6481b956-06ca-410a-ae4e-ed8d373cc994/page/p_hupuqgi03d"
             frameBorder="0"
             allowFullScreen
             onLoad={() => setIframeLoading(false)}
@@ -63,4 +63,4 @@ export const BerkebutuhanKhusus = ({ restartKey = 0, onRestart = () => {} }) => 
   );
 };
 
-export default BerkebutuhanKhusus;
+export default Smp;

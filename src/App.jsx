@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MapPin, Users, FileText, Shirt, Heart } from 'lucide-react';
 import Geospatial from './pages/Geospatial';
-import Demografi from './pages/Demografi';
-import Registrasi from './pages/Registrasi';
-import SeragamGratis from './pages/SeragamGratis';
-import BerkebutuhanKhusus from './pages/BerkebutuhanKhusus';
+import Beranda from './pages/Beranda';
+import Paud from './pages/Paud';
+import Sd from './pages/Sd';
+import Smp from './pages/Smp';
 import EmbedItem from './components/EmbedItem';
 
 function Home() {
@@ -24,40 +24,40 @@ function Home() {
       accentColor: 'text-blue-600',
     },
     {
-      title: 'Demografi',
-      description: 'Data demografis peserta SPMB',
-      path: '/demografi',
-      embedUrl: `${baseUrl}/demografi`,
+      title: 'Beranda',
+      description: 'Beranda peserta SPMB',
+      path: '/beranda',
+      embedUrl: `${baseUrl}/beranda`,
       icon: Users,
       color: 'from-green-500 to-green-600',
       lightColor: 'bg-green-50',
       accentColor: 'text-green-600',
     },
     {
-      title: 'Registrasi',
-      description: 'Data pendaftaran peserta',
-      path: '/registrasi',
-      embedUrl: `${baseUrl}/registrasi`,
+      title: 'Paud',
+      description: 'Data peserta PAUD',
+      path: '/paud',
+      embedUrl: `${baseUrl}/paud`,
       icon: FileText,
       color: 'from-red-500 to-red-600',
       lightColor: 'bg-red-50',
       accentColor: 'text-red-600',
     },
     {
-      title: 'Seragam Gratis',
-      description: 'Program pemberian seragam',
-      path: '/seragam',
-      embedUrl: `${baseUrl}/seragam`,
-      icon: Shirt,
-      color: 'from-amber-500 to-amber-600',
+      title: 'SD',
+      description: 'Data peserta SD',
+      path: '/sd',
+      embedUrl: `${baseUrl}/sd`,
+      icon: FileText,
+      color: 'from-blue-500 to-blue-600',
       lightColor: 'bg-amber-50',
       accentColor: 'text-amber-600',
     },
     {
-      title: 'Berkebutuhan Khusus',
-      description: 'Data peserta dengan kebutuhan khusus',
-      path: '/berkebutuhan',
-      embedUrl: `${baseUrl}/berkebutuhan`,
+      title: 'Smp',
+      description: 'Data peserta SMP',
+      path: '/smp',
+      embedUrl: `${baseUrl}/smp`,
       icon: Heart,
       color: 'from-purple-500 to-purple-600',
       lightColor: 'bg-purple-50',
@@ -122,20 +122,20 @@ function AppContent({ restartToken, handleRestartPage }) {
             element={<Geospatial restartKey={restartToken} onRestart={handleRestartPage} />}
           />
           <Route
-            path="/demografi"
-            element={<Demografi restartKey={restartToken} onRestart={handleRestartPage} />}
+            path="/beranda"
+            element={<Beranda restartKey={restartToken} onRestart={handleRestartPage} />}
           />
           <Route
-            path="/registrasi"
-            element={<Registrasi restartKey={restartToken} onRestart={handleRestartPage} />}
+            path="/paud"
+            element={<Paud restartKey={restartToken} onRestart={handleRestartPage} />}
           />
           <Route
-            path="/seragam"
-            element={<SeragamGratis restartKey={restartToken} onRestart={handleRestartPage} />}
+            path="/sd"
+            element={<Sd restartKey={restartToken} onRestart={handleRestartPage} />}
           />
           <Route
-            path="/berkebutuhan"
-            element={<BerkebutuhanKhusus restartKey={restartToken} onRestart={handleRestartPage} />}
+            path="/Smp"
+            element={<Smp restartKey={restartToken} onRestart={handleRestartPage} />}
           />
         </Routes>
       </main>

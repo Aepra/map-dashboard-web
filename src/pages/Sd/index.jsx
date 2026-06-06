@@ -1,8 +1,8 @@
+import { useEffect, useState } from 'react';
 import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
 import FloatingRestartButton from '../../components/FloatingRestartButton';
-import { useEffect, useState } from 'react';
 
-export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
+export const Sd = ({ restartKey = 0, onRestart = () => {} }) => {
   const [iframeLoading, setIframeLoading] = useState(true);
 
   useEffect(() => {
@@ -32,8 +32,8 @@ export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
       >
         {iframeLoading && (
           <DashboardLoadingOverlay
-            title="Memuat Dashboard Registrasi"
-            message="Sedang menyiapkan tampilan registrasi..."
+            title="Memuat Dashboard SD"
+            message="Sedang menyiapkan tampilan dashboard SD..."
             fullScreen={false}
           />
         )}
@@ -45,7 +45,7 @@ export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
         >
           <iframe
             key={restartKey}
-            src="https://datastudio.google.com/embed/reporting/618aa6b8-9cec-4fee-9950-80852e6c5d4f/page/p_51xqv9f82d"
+            src="https://datastudio.google.com/embed/reporting/6481b956-06ca-410a-ae4e-ed8d373cc994/page/p_v9ltlgi03d"
             frameBorder="0"
             allowFullScreen
             onLoad={() => setIframeLoading(false)}
@@ -63,4 +63,4 @@ export const Registrasi = ({ restartKey = 0, onRestart = () => {} }) => {
   );
 };
 
-export default Registrasi;
+export default Sd;

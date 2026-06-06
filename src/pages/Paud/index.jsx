@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
 import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
 import FloatingRestartButton from '../../components/FloatingRestartButton';
+import { useEffect, useState } from 'react';
 
-export const Demografi = ({ restartKey = 0, onRestart = () => {} }) => {
+export const Paud = ({ restartKey = 0, onRestart = () => {} }) => {
   const [iframeLoading, setIframeLoading] = useState(true);
 
   useEffect(() => {
@@ -32,8 +32,8 @@ export const Demografi = ({ restartKey = 0, onRestart = () => {} }) => {
       >
         {iframeLoading && (
           <DashboardLoadingOverlay
-            title="Memuat Dashboard Demografi"
-            message="Sedang menyiapkan tampilan demografi..."
+            title="Memuat Dashboard Paud"
+            message="Sedang menyiapkan tampilan Paud..."
             fullScreen={false}
           />
         )}
@@ -45,7 +45,7 @@ export const Demografi = ({ restartKey = 0, onRestart = () => {} }) => {
         >
           <iframe
             key={restartKey}
-            src="https://datastudio.google.com/embed/reporting/618aa6b8-9cec-4fee-9950-80852e6c5d4f/page/p_8u98l9ca3d"
+            src="https://datastudio.google.com/embed/reporting/6481b956-06ca-410a-ae4e-ed8d373cc994/page/p_bnrovuf03d"
             frameBorder="0"
             allowFullScreen
             onLoad={() => setIframeLoading(false)}
@@ -63,4 +63,4 @@ export const Demografi = ({ restartKey = 0, onRestart = () => {} }) => {
   );
 };
 
-export default Demografi;
+export default Paud;

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import { MapPin, Users, FileText, Heart } from 'lucide-react';
 import Geospatial from './pages/Geospatial';
-import Beranda from './pages/Beranda';
+import Registrasi_Data_Id from './pages/Registrasi_Data_Id';
 import Paud from './pages/Paud';
 import Sd from './pages/Sd';
 import Smp from './pages/Smp';
@@ -26,9 +26,9 @@ function Home() {
       accentColor: 'text-blue-600',
     },
     {
-      id: 'beranda',
-      title: 'Beranda',
-      description: 'Beranda peserta SPMB',
+      id: 'Registrasi_Data_Id',
+      title: 'Registrasi Data ID',
+      description: 'Registrasi data ID peserta SPMB',
       icon: Users,
       color: 'from-green-500 to-green-600',
       lightColor: 'bg-green-50',
@@ -90,7 +90,8 @@ function Home() {
                   <div className="flex flex-col gap-4">
                     {baseDashboards.map((dashboard) => {
                       // Check if the URL exists for this year
-                      if (!config[year][dashboard.id]) return null;
+                      const configKey = dashboard.id === 'Registrasi_Data_Id' ? 'beranda' : dashboard.id;
+                      if (!config[year][configKey]) return null;
 
                       const Icon = dashboard.icon;
                       const path = `/${dashboard.id}/${year}`;
@@ -147,9 +148,9 @@ function GeospatialWrapper({ restartKey, onRestart }) {
   return <Geospatial year={year} restartKey={restartKey} onRestart={onRestart} />;
 }
 
-function BerandaWrapper({ restartKey, onRestart }) {
+function Registrasi_Data_IdWrapper({ restartKey, onRestart }) {
   const { year } = useParams();
-  return <Beranda year={year} restartKey={restartKey} onRestart={onRestart} />;
+  return <Registrasi_Data_Id year={year} restartKey={restartKey} onRestart={onRestart} />;
 }
 
 function PaudWrapper({ restartKey, onRestart }) {
@@ -178,8 +179,8 @@ function AppContent({ restartToken, handleRestartPage }) {
             element={<GeospatialWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
           />
           <Route
-            path="/beranda/:year"
-            element={<BerandaWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
+            path="/Registrasi_Data_Id/:year"
+            element={<Registrasi_Data_IdWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
           />
           <Route
             path="/paud/:year"

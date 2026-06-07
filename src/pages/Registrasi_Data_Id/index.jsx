@@ -3,7 +3,7 @@ import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
 import FloatingRestartButton from '../../components/FloatingRestartButton';
 import { getUrlForTypeAndYear } from '../../utils/envConfig';
 
-export const Beranda = ({ year, restartKey = 0, onRestart = () => {} }) => {
+export const Registrasi_Data_Id = ({ year, restartKey = 0, onRestart = () => {} }) => {
   const [iframeLoading, setIframeLoading] = useState(true);
   const embedUrl = getUrlForTypeAndYear('BERANDA', year);
 
@@ -76,4 +76,4 @@ export const Beranda = ({ year, restartKey = 0, onRestart = () => {} }) => {
   );
 };
 
-export default Beranda;
+export default Registrasi_Data_Id;

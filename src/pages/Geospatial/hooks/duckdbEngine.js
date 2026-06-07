@@ -1,7 +1,7 @@
 // duckdbEngine.js
 // Global singleton for DuckDB WASM, connection, and data cache
 import * as duckdb from '@duckdb/duckdb-wasm';
-import { DUCKDB_CONFIG, PARQUET_URL } from '../utils/constants';
+import { DUCKDB_CONFIG } from '../utils/constants';
 
 const globalCache = {
   db: null,
@@ -12,12 +12,25 @@ const globalCache = {
   idColumn: null,
   jalurColumn: null,
   parquetSource: null,
+  selectClause: null, // Store the select clause for delta sync
   initPromise: null,
 };
 
-export async function initDuckDB() {
-  if (globalCache.initialized && globalCache.data) return globalCache;
-  if (globalCache.initPromise) return globalCache.initPromise;
+export async function initDuckDB(parquetUrl) {
+  if (globalCache.initialized && globalCache.data && globalCache.parquetSource === parquetUrl) return globalCache;
+  if (globalCache.initPromise && globalCache.parquetSource === parquetUrl) return globalCache.initPromise;
+
+  // Reset cache if url changes
+  if (globalCache.parquetSource && globalCache.parquetSource !== parquetUrl) {
+    globalCache.data = null;
+    globalCache.initialized = false;
+    globalCache.schema = null;
+    globalCache.idColumn = null;
+    globalCache.jalurColumn = null;
+    globalCache.selectClause = null;
+  }
+
+  globalCache.parquetSource = parquetUrl;
 
   globalCache.initPromise = (async () => {
     const logger = new duckdb.ConsoleLogger();
@@ -26,9 +39,9 @@ export async function initDuckDB() {
     await _db.instantiate(DUCKDB_CONFIG.mainModule);
     globalCache.db = _db;
     globalCache.conn = await _db.connect();
-    // Register parquet directly from the configured GCS URL.
+    // Register parquet directly from the provided URL.
     const parquetCandidates = [
-      { alias: 'data_remote.parquet', url: PARQUET_URL },
+      { alias: 'data_remote.parquet', url: parquetUrl },
     ];
 
     let activeParquetAlias = null;
@@ -40,7 +53,6 @@ export async function initDuckDB() {
         const probe = await globalCache.conn.query(`SELECT * FROM '${candidate.alias}' LIMIT 1`);
         activeParquetAlias = candidate.alias;
         sampleResult = probe;
-        globalCache.parquetSource = candidate.url;
         break;
       } catch {
         // Try next source
@@ -48,7 +60,7 @@ export async function initDuckDB() {
     }
 
     if (!activeParquetAlias) {
-      throw new Error('Gagal memuat parquet dari VITE_DATA_SOURCE_URL');
+      throw new Error(`Gagal memuat parquet dari URL: ${parquetUrl}`);
     }
 
     // Detect schema and columns (with flexible name mapping)
@@ -118,14 +130,62 @@ export async function initDuckDB() {
     else selectClause += `,CAST(NULL AS VARCHAR) as id_peserta`;
     if (globalCache.jalurColumn) selectClause += `,${cleanTextExpr(globalCache.jalurColumn)} as jalur`;
     else selectClause += `,CAST(NULL AS VARCHAR) as jalur`;
+    
+    globalCache.selectClause = selectClause;
+
+    // Create a local table in DuckDB to hold the data, so we can insert deltas later
     const query = `SELECT ${selectClause} FROM '${activeParquetAlias}'`;
-    const resultAll = await globalCache.conn.query(query);
+    await globalCache.conn.query(`CREATE TABLE local_students AS ${query}`);
+    
+    const resultAll = await globalCache.conn.query(`SELECT * FROM local_students`);
     // Store as raw array of objects (no transformation in React)
     globalCache.data = resultAll.toArray().map(row => row.toJSON());
     globalCache.initialized = true;
     return globalCache;
   })();
   return globalCache.initPromise;
+}
+
+export async function syncDeltaData(deltaUrl) {
+  if (!globalCache.initialized || !deltaUrl || !globalCache.conn) return globalCache.data;
+  
+  const timestamp = Date.now();
+  const deltaAlias = `delta_${timestamp}.parquet`;
+  // Add a cache buster so the browser physically re-fetches the file
+  const urlWithCacheBuster = `${deltaUrl}?t=${timestamp}`;
+  
+  try {
+    // 1. Register the new delta file
+    await globalCache.db.registerFileURL(deltaAlias, urlWithCacheBuster, duckdb.DuckDBDataProtocol.HTTP, false);
+    
+    // UPSERT LOGIC
+    // 2. Delete existing rows that match the IDs in the delta file (if an ID column exists)
+    // This ensures if a student's status changes, we replace their old record.
+    if (globalCache.idColumn) {
+       await globalCache.conn.query(`
+         DELETE FROM local_students 
+         WHERE id_peserta IN (
+           SELECT CASE WHEN UPPER(TRIM(CAST("${globalCache.idColumn}" AS VARCHAR))) IN ('NA', 'N/A', 'NULL', '-') OR TRIM(CAST("${globalCache.idColumn}" AS VARCHAR)) = '' THEN NULL ELSE CAST("${globalCache.idColumn}" AS VARCHAR) END 
+           FROM '${deltaAlias}'
+         )
+       `);
+    }
+    
+    // 3. Insert the new/updated rows from the delta file into our local table
+    await globalCache.conn.query(`
+      INSERT INTO local_students 
+      SELECT ${globalCache.selectClause} FROM '${deltaAlias}'
+    `);
+    
+    // 4. Re-fetch all data to update the React state
+    const resultAll = await globalCache.conn.query(`SELECT * FROM local_students`);
+    globalCache.data = resultAll.toArray().map(row => row.toJSON());
+    
+    return globalCache.data;
+  } catch (err) {
+    console.error("Failed to sync delta parquet:", err);
+    return globalCache.data; // Fallback to existing data if the delta fails
+  }
 }
 
 export function getCachedData() {

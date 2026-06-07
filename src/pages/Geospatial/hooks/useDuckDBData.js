@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { initDuckDB, getCachedData } from './duckdbEngine';
+import { initDuckDB, getCachedData, syncDeltaData } from './duckdbEngine';
 import { tableFromIPC } from 'apache-arrow';
 
 const buildDropdownOptions = (rows = []) => {
@@ -49,13 +49,14 @@ const arrowTableToRows = (table) => {
   return rows;
 };
 
-export const useDuckDBData = (viewportBounds, filters, limit = null) => {
+export const useDuckDBData = (viewportBounds, filters, limit = null, parquetUrl, deltaParquetUrl) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({ total: 0, sd: 0, smp: 0, paud: 0 });
   const [dropdownOptions, setDropdownOptions] = useState({ jenjang: [], status: [], jalur: [] });
   const [initialized, setInitialized] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(Date.now());
 
   // Use refs to prevent recreating listeners
   const workerListenerAttachedRef = useRef(false);
@@ -107,12 +108,13 @@ export const useDuckDBData = (viewportBounds, filters, limit = null) => {
 
   // INIT ONCE - attach listener and load DuckDB
   useEffect(() => {
+    if (!parquetUrl) return;
     let cancelled = false;
 
     (async () => {
       try {
         setLoading(true);
-        await initDuckDB();
+        await initDuckDB(parquetUrl);
 
         if (!cancelled) {
           // Attach listener before marking initialized
@@ -136,14 +138,38 @@ export const useDuckDBData = (viewportBounds, filters, limit = null) => {
     return () => {
       cancelled = true;
     };
-  }, [attachWorkerListener]);
+  }, [attachWorkerListener, parquetUrl]);
 
-  // VIEWPORT FILTERING - post message when data/bounds/filters change
+  // INCREMENTAL DELTA SYNC POLLING (every 5 mins)
+  useEffect(() => {
+    if (!initialized || !deltaParquetUrl) return;
+    
+    // Poll every 5 minutes (300,000 ms)
+    const SYNC_INTERVAL = 5 * 60 * 1000;
+    
+    const intervalId = setInterval(async () => {
+       console.log("Memulai sinkronisasi delta parquet...");
+       await syncDeltaData(deltaParquetUrl);
+       
+       // Build new dropdown options just in case delta brings new categorical values
+       const allData = getCachedData();
+       if (allData) {
+         setDropdownOptions(buildDropdownOptions(allData));
+       }
+       
+       // Trigger re-render/re-filter
+       setLastSyncTime(Date.now()); 
+    }, SYNC_INTERVAL);
+    
+    return () => clearInterval(intervalId);
+  }, [initialized, deltaParquetUrl]);
+
+  // VIEWPORT FILTERING - post message when data/bounds/filters/sync change
   useEffect(() => {
     if (!initialized) return;
 
     const worker = getWorker();
-    const allData = getCachedData();
+    const allData = getCachedData(); // Uses latest from cache (including deltas)
 
     if (!allData) return;
 
@@ -161,9 +187,9 @@ export const useDuckDBData = (viewportBounds, filters, limit = null) => {
         },
       });
     }, 120);
-  }, [initialized, viewportBounds, filters, limit]);
+  }, [initialized, viewportBounds, filters, limit, lastSyncTime]);
 
-  // STATS - update when filters change
+  // STATS - update when filters or sync changes
   useEffect(() => {
     if (!initialized) return;
 
@@ -179,7 +205,7 @@ export const useDuckDBData = (viewportBounds, filters, limit = null) => {
         filters,
       },
     });
-  }, [initialized, filters]);
+  }, [initialized, filters, lastSyncTime]);
 
   const reloadData = useCallback(() => {
     setLoading(true);

@@ -1,14 +1,27 @@
 import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
 import FloatingRestartButton from '../../components/FloatingRestartButton';
 import { useEffect, useState } from 'react';
+import { getUrlForTypeAndYear } from '../../utils/envConfig';
 
-export const Paud = ({ restartKey = 0, onRestart = () => {} }) => {
+export const Paud = ({ year, restartKey = 0, onRestart = () => {} }) => {
   const [iframeLoading, setIframeLoading] = useState(true);
+  const embedUrl = getUrlForTypeAndYear('PAUD', year);
 
   useEffect(() => {
     const loadingTimer = setTimeout(() => setIframeLoading(true), 0);
     return () => clearTimeout(loadingTimer);
-  }, [restartKey]);
+  }, [restartKey, year]);
+
+  if (!embedUrl) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50 text-gray-800">
+        <div className="p-8 bg-white rounded-xl shadow-sm border border-gray-200 text-center">
+          <h2 className="text-2xl font-bold mb-4">Data Tidak Ditemukan</h2>
+          <p>Konfigurasi URL PAUD untuk tahun {year} belum tersedia di file .env.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -32,8 +45,8 @@ export const Paud = ({ restartKey = 0, onRestart = () => {} }) => {
       >
         {iframeLoading && (
           <DashboardLoadingOverlay
-            title="Memuat Dashboard Paud"
-            message="Sedang menyiapkan tampilan Paud..."
+            title={`Memuat Dashboard PAUD (${year})`}
+            message={`Sedang menyiapkan tampilan PAUD tahun ${year}...`}
             fullScreen={false}
           />
         )}
@@ -44,8 +57,8 @@ export const Paud = ({ restartKey = 0, onRestart = () => {} }) => {
           }}
         >
           <iframe
-            key={restartKey}
-            src="https://datastudio.google.com/embed/reporting/6481b956-06ca-410a-ae4e-ed8d373cc994/page/p_bnrovuf03d"
+            key={`${restartKey}-${year}`}
+            src={embedUrl}
             frameBorder="0"
             allowFullScreen
             onLoad={() => setIframeLoading(false)}

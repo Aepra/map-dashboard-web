@@ -14,8 +14,7 @@ import { InfoPanel } from '../components/InfoPanel';
 import { StatsPanel } from '../components/StatsPanel';
 import FloatingRestartButton from '../../../components/FloatingRestartButton';
 import logoColor from '../../../assets/images/ICON_SPMB.svg';
-
-
+import { getUrlForTypeAndYear, getDeltaUrlForTypeAndYear } from '../../../utils/envConfig';
 
 const selectDropdownStyle = {
   padding: '10px 14px',
@@ -97,7 +96,7 @@ const SATELLITE_MAP_STYLE = {
 
 const normalizeSearchText = (value) => getDisplayValue(value)?.toLowerCase() || '';
 
-const GeospatialMap = ({ onRestart = () => {} }) => {
+const GeospatialMap = ({ year, onRestart = () => {} }) => {
   const MAX_RENDERED_STUDENTS_NEAR = 12000;
   const MAX_RENDERED_STUDENTS_MID = 8000;
   const MAX_RENDERED_STUDENTS_FAR = 5000;
@@ -120,6 +119,9 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
   const [topBarHeight, setTopBarHeight] = useState(96);
   const [hoveredHeaderItem, setHoveredHeaderItem] = useState(null);
   const topBarRef = useRef(null);
+
+  const parquetUrl = getUrlForTypeAndYear('GEOSPATIAL', year);
+  const deltaParquetUrl = getDeltaUrlForTypeAndYear('GEOSPATIAL', year);
 
   useEffect(() => {
     const handleResize = () => setViewportWidth(window.innerWidth);
@@ -220,7 +222,8 @@ const GeospatialMap = ({ onRestart = () => {} }) => {
   // Get raw data from DuckDB
   // Pass a stable empty filters object so useDuckDBData's effects don't re-run
   const initialWorkerFilters = useMemo(() => ({}), []);
-  const { data, loading, error, stats, dropdownOptions } = useDuckDBData(null, initialWorkerFilters);
+  const { data, loading, error, stats, dropdownOptions } = useDuckDBData(null, initialWorkerFilters, null, parquetUrl, deltaParquetUrl);
+
 
   // Extract dropdown values from full cached dataset
   const uniqueJenjang = dropdownOptions.jenjang;

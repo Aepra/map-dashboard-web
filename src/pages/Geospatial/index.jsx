@@ -1,6 +1,6 @@
 import GeospatialMap from './components/GeospatialMap';
 
-export const Geospatial = ({ restartKey = 0, onRestart = () => {} }) => {
+export const Geospatial = ({ year, restartKey = 0, onRestart = () => {} }) => {
   return (
     <div
       style={{
@@ -13,7 +13,7 @@ export const Geospatial = ({ restartKey = 0, onRestart = () => {} }) => {
       }}
     >
       <div style={{ flex: 1, minHeight: 0 }}>
-        <GeospatialMap key={restartKey} onRestart={onRestart} />
+        <GeospatialMap year={year} key={restartKey} onRestart={onRestart} />
       </div>
     </div>
   );

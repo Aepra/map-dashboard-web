@@ -8,31 +8,45 @@ export const getDashboardsConfig = () => {
   const env = import.meta.env;
   const config = {};
 
-  // Supported types
-  const types = ['BERANDA', 'GEOSPATIAL', 'PAUD', 'SD', 'SMP'];
+  const typeMapping = {
+    'REGISTRASI_DATA_ID': 'registrasi_data_id',
+    'REGISTRASI_ID': 'registrasi_data_id',
+    'REGISTRASI_DATA_NIK': 'registrasi_data_nik',
+    'REGISTRASI_NIK': 'registrasi_data_nik',
+    'GEOSPATIAL': 'geospatial',
+    'PAUD': 'tk',
+    'TK': 'tk',
+    'SD': 'sd',
+    'SMP': 'smp',
+  };
+
+  const defaultYear = 2025;
 
   Object.keys(env).forEach((key) => {
     if (key.startsWith('VITE_')) {
-      const parts = key.split('_');
-      // e.g., ['VITE', 'BERANDA', '2025'] or ['VITE', 'GEOSPATIAL', 'DATA', '2025']
-      
-      // The last part should be the year
-      const yearStr = parts[parts.length - 1];
-      const year = parseInt(yearStr, 10);
+      let typeMatch = null;
 
-      if (!isNaN(year) && year > 2000 && year < 2100) {
-        // Extract the type by joining the parts between VITE_ and _YEAR
-        const typeStr = parts.slice(1, parts.length - 1).join('_').toUpperCase();
-        
-        // Match with supported types (ignoring extra words like 'DATA')
-        const matchedType = types.find(t => typeStr.includes(t));
-        
-        if (matchedType) {
-          if (!config[year]) {
-            config[year] = {};
-          }
-          config[year][matchedType.toLowerCase()] = env[key];
+      for (const [envType, mappedType] of Object.entries(typeMapping)) {
+        if (key.includes(envType)) {
+          typeMatch = mappedType;
+          break;
         }
+      }
+
+      if (typeMatch) {
+        const parts = key.split('_');
+        const yearStr = parts[parts.length - 1];
+        let year = parseInt(yearStr, 10);
+
+        if (isNaN(year) || year < 2000 || year > 2100) {
+          year = defaultYear;
+        }
+
+        if (!config[year]) {
+          config[year] = {};
+        }
+        
+        config[year][typeMatch] = env[key];
       }
     }
   });

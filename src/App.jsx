@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
-import { MapPin, Users, FileText, Heart } from 'lucide-react';
+import { Users, FileText, Heart, UserCircle, Map } from 'lucide-react';
 import Geospatial from './pages/Geospatial';
 import Registrasi_Data_Id from './pages/Registrasi_Data_Id';
-import Paud from './pages/Paud';
+import Registrasi_Data_Nik from './pages/Registrasi_Data_Nik';
+import Tk from './pages/Tk';
 import Sd from './pages/Sd';
 import Smp from './pages/Smp';
 import EmbedItem from './components/EmbedItem';
@@ -19,9 +19,9 @@ function Home() {
     {
       id: 'geospatial',
       title: 'Geospatial',
-      description: 'Peta peserta berdasarkan lokasi geografis',
-      icon: MapPin,
-      color: 'from-blue-500 to-blue-600',
+      description: 'Peta sebaran data murid',
+      icon: Map,
+      color: 'from-blue-500 to-indigo-600',
       lightColor: 'bg-blue-50',
       accentColor: 'text-blue-600',
     },
@@ -35,9 +35,18 @@ function Home() {
       accentColor: 'text-green-600',
     },
     {
-      id: 'paud',
-      title: 'PAUD',
-      description: 'Data peserta PAUD',
+      id: 'Registrasi_Data_Nik',
+      title: 'Registrasi Data NIK',
+      description: 'Registrasi data NIK peserta SPMB',
+      icon: UserCircle,
+      color: 'from-teal-500 to-teal-600',
+      lightColor: 'bg-teal-50',
+      accentColor: 'text-teal-600',
+    },
+    {
+      id: 'tk',
+      title: 'TK',
+      description: 'Data peserta TK',
       icon: FileText,
       color: 'from-red-500 to-red-600',
       lightColor: 'bg-red-50',
@@ -81,7 +90,7 @@ function Home() {
           <div className="flex flex-col gap-6 mb-12">
             {years.length === 0 ? (
               <div className="p-6 bg-yellow-50 text-yellow-800 rounded-xl border border-yellow-200">
-                Belum ada konfigurasi tahun di file .env. Silakan tambahkan variabel seperti VITE_BERANDA_2025=...
+                Belum ada konfigurasi tahun di file .env. Silakan tambahkan variabel seperti VITE_REGISTRASI_DATA_ID_2025=...
               </div>
             ) : (
               years.map((year) => (
@@ -90,7 +99,7 @@ function Home() {
                   <div className="flex flex-col gap-4">
                     {baseDashboards.map((dashboard) => {
                       // Check if the URL exists for this year
-                      const configKey = dashboard.id === 'Registrasi_Data_Id' ? 'beranda' : dashboard.id;
+                      const configKey = dashboard.id.toLowerCase();
                       if (!config[year][configKey]) return null;
 
                       const Icon = dashboard.icon;
@@ -153,9 +162,14 @@ function Registrasi_Data_IdWrapper({ restartKey, onRestart }) {
   return <Registrasi_Data_Id year={year} restartKey={restartKey} onRestart={onRestart} />;
 }
 
-function PaudWrapper({ restartKey, onRestart }) {
+function Registrasi_Data_NikWrapper({ restartKey, onRestart }) {
   const { year } = useParams();
-  return <Paud year={year} restartKey={restartKey} onRestart={onRestart} />;
+  return <Registrasi_Data_Nik year={year} restartKey={restartKey} onRestart={onRestart} />;
+}
+
+function TkWrapper({ restartKey, onRestart }) {
+  const { year } = useParams();
+  return <Tk year={year} restartKey={restartKey} onRestart={onRestart} />;
 }
 
 function SdWrapper({ restartKey, onRestart }) {
@@ -183,8 +197,12 @@ function AppContent({ restartToken, handleRestartPage }) {
             element={<Registrasi_Data_IdWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
           />
           <Route
-            path="/paud/:year"
-            element={<PaudWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
+            path="/Registrasi_Data_Nik/:year"
+            element={<Registrasi_Data_NikWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
+          />
+          <Route
+            path="/tk/:year"
+            element={<TkWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
           />
           <Route
             path="/sd/:year"

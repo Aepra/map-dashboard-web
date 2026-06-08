@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
 import DashboardLoadingOverlay from '../../components/DashboardLoadingOverlay';
 import FloatingRestartButton from '../../components/FloatingRestartButton';
+import { useEffect, useState } from 'react';
 import { getUrlForTypeAndYear } from '../../utils/envConfig';
 
-export const Registrasi_Data_Id = ({ year, restartKey = 0, onRestart = () => {} }) => {
+export const Tk = ({ year, restartKey = 0, onRestart = () => {} }) => {
   const [iframeLoading, setIframeLoading] = useState(true);
-  const embedUrl = getUrlForTypeAndYear('REGISTRASI_DATA_ID', year);
+  const embedUrl = getUrlForTypeAndYear('TK', year);
 
   useEffect(() => {
     const loadingTimer = setTimeout(() => setIframeLoading(true), 0);
@@ -17,7 +17,7 @@ export const Registrasi_Data_Id = ({ year, restartKey = 0, onRestart = () => {} 
       <div className="flex items-center justify-center h-screen bg-gray-50 text-gray-800">
         <div className="p-8 bg-white rounded-xl shadow-sm border border-gray-200 text-center">
           <h2 className="text-2xl font-bold mb-4">Data Tidak Ditemukan</h2>
-          <p>Konfigurasi URL Registrasi Data ID untuk tahun {year} belum tersedia di file .env.</p>
+          <p>Konfigurasi URL TK untuk tahun {year} belum tersedia di file .env.</p>
         </div>
       </div>
     );
@@ -45,8 +45,8 @@ export const Registrasi_Data_Id = ({ year, restartKey = 0, onRestart = () => {} 
       >
         {iframeLoading && (
           <DashboardLoadingOverlay
-            title={`Memuat Registrasi Data ID (${year})`}
-            message={`Sedang menyiapkan tampilan Registrasi Data ID tahun ${year}...`}
+            title={`Memuat Dashboard TK (${year})`}
+            message={`Sedang menyiapkan tampilan TK tahun ${year}...`}
             fullScreen={false}
           />
         )}
@@ -76,4 +76,4 @@ export const Registrasi_Data_Id = ({ year, restartKey = 0, onRestart = () => {} 
   );
 };
 
-export default Registrasi_Data_Id;
+export default Tk;

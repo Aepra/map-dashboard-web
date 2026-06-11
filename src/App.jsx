@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
-import { Users, FileText, Heart, UserCircle, Map } from 'lucide-react';
+import { Users, FileText, Heart, UserCircle, Map, UserPlus, AlertTriangle } from 'lucide-react';
 import Geospatial from './pages/Geospatial';
 import Registrasi_Data_Id from './pages/Registrasi_Data_Id';
 import Registrasi_Data_Nik from './pages/Registrasi_Data_Nik';
 import Tk from './pages/Tk';
 import Sd from './pages/Sd';
 import Smp from './pages/Smp';
+import Pendaftaran_Akun from './pages/Pendaftaran_Akun';
+import Outlier from './pages/Outlier';
 import EmbedItem from './components/EmbedItem';
 import { getAvailableYears, getDashboardsConfig } from './utils/envConfig';
 
@@ -69,6 +71,24 @@ function Home() {
       color: 'from-purple-500 to-purple-600',
       lightColor: 'bg-purple-50',
       accentColor: 'text-purple-600',
+    },
+    {
+      id: 'pendaftaran_akun',
+      title: 'Pendaftaran Akun',
+      description: 'Data pendaftaran akun peserta SPMB',
+      icon: UserPlus,
+      color: 'from-cyan-500 to-cyan-600',
+      lightColor: 'bg-cyan-50',
+      accentColor: 'text-cyan-600',
+    },
+    {
+      id: 'outlier',
+      title: 'Outlier',
+      description: 'Data outlier peserta SPMB',
+      icon: AlertTriangle,
+      color: 'from-orange-500 to-orange-600',
+      lightColor: 'bg-orange-50',
+      accentColor: 'text-orange-600',
     },
   ];
 
@@ -182,6 +202,16 @@ function SmpWrapper({ restartKey, onRestart }) {
   return <Smp year={year} restartKey={restartKey} onRestart={onRestart} />;
 }
 
+function Pendaftaran_AkunWrapper({ restartKey, onRestart }) {
+  const { year } = useParams();
+  return <Pendaftaran_Akun year={year} restartKey={restartKey} onRestart={onRestart} />;
+}
+
+function OutlierWrapper({ restartKey, onRestart }) {
+  const { year } = useParams();
+  return <Outlier year={year} restartKey={restartKey} onRestart={onRestart} />;
+}
+
 function AppContent({ restartToken, handleRestartPage }) {
   return (
     <div className="flex flex-col h-screen w-screen font-sans bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -211,6 +241,14 @@ function AppContent({ restartToken, handleRestartPage }) {
           <Route
             path="/smp/:year"
             element={<SmpWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
+          />
+          <Route
+            path="/pendaftaran_akun/:year"
+            element={<Pendaftaran_AkunWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
+          />
+          <Route
+            path="/outlier/:year"
+            element={<OutlierWrapper restartKey={restartToken} onRestart={handleRestartPage} />}
           />
         </Routes>
       </main>

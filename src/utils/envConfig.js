@@ -18,6 +18,8 @@ export const getDashboardsConfig = () => {
     'TK': 'tk',
     'SD': 'sd',
     'SMP': 'smp',
+    'PENDAFTARAN_AKUN': 'pendaftaran_akun',
+    'OUTLIER': 'outlier',
   };
 
   const defaultYear = 2025;

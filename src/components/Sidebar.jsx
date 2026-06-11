@@ -9,6 +9,10 @@ import berkebIconDark from '../assets/icons/berkebutuhankhusus_icon_dark.svg';
 import berkebIconLight from '../assets/icons/berkebutuhankhusus_icon_light.svg';
 import seragamIconDark from '../assets/icons/seragamgratis_Dark.svg';
 import seragamIconLight from '../assets/icons/seragamgratis_light.svg';
+import pendaftaranAkunIconDark from '../assets/icons/pendaftaran_akun_dark.svg';
+import pendaftaranAkunIconLight from '../assets/icons/pendaftaran_akun_light.svg';
+import outlierIconDark from '../assets/icons/outlier_dark.svg';
+import outlierIconLight from '../assets/icons/outlier_light.svg';
 
 /**
  * Global Navigation Sidebar
@@ -106,6 +110,32 @@ const Sidebar = ({
         >
           <img src={getIcon('seragam', seragamIconDark, seragamIconLight)} alt="Seragam Gratis" className="w-6 h-6" />
           <span>Seragam Gratis</span>
+        </button>
+
+        <button
+          onClick={() => onNavigate('pendaftaran_akun')}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-helvetica transition-all ${
+            activePage === 'pendaftaran_akun'
+              ? 'text-white font-semibold'
+              : 'text-gray-600 font-normal hover:text-gray-700'
+          }`}
+          style={activePage === 'pendaftaran_akun' ? { backgroundColor: 'rgb(182, 32, 37)' } : {}}
+        >
+          <img src={getIcon('pendaftaran_akun', pendaftaranAkunIconDark, pendaftaranAkunIconLight)} alt="Pendaftaran Akun" className="w-6 h-6" />
+          <span>Pendaftaran Akun</span>
+        </button>
+
+        <button
+          onClick={() => onNavigate('outlier')}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-helvetica transition-all ${
+            activePage === 'outlier'
+              ? 'text-white font-semibold'
+              : 'text-gray-600 font-normal hover:text-gray-700'
+          }`}
+          style={activePage === 'outlier' ? { backgroundColor: 'rgb(182, 32, 37)' } : {}}
+        >
+          <img src={getIcon('outlier', outlierIconDark, outlierIconLight)} alt="Outlier" className="w-6 h-6" />
+          <span>Outlier</span>
         </button>
       </nav>
     </aside>

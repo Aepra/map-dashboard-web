@@ -39,17 +39,25 @@ export async function initDuckDB(parquetUrl) {
     await _db.instantiate(DUCKDB_CONFIG.mainModule);
     globalCache.db = _db;
     globalCache.conn = await _db.connect();
-    // Register parquet directly from the provided URL.
+    // Fetch parquet manually using fetch() which follows redirects (GCS often redirects).
+    // Then register the file as a buffer in DuckDB's virtual filesystem.
+    let activeParquetAlias = null;
+    let sampleResult = null;
+
+    const fetchAndRegister = async (alias, url) => {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status} fetching parquet`);
+      const buffer = await response.arrayBuffer();
+      await _db.registerFileBuffer(alias, new Uint8Array(buffer));
+    };
+
     const parquetCandidates = [
       { alias: 'data_remote.parquet', url: parquetUrl },
     ];
 
-    let activeParquetAlias = null;
-    let sampleResult = null;
-
     for (const candidate of parquetCandidates) {
       try {
-        await _db.registerFileURL(candidate.alias, candidate.url, duckdb.DuckDBDataProtocol.HTTP, false);
+        await fetchAndRegister(candidate.alias, candidate.url);
         const probe = await globalCache.conn.query(`SELECT * FROM '${candidate.alias}' LIMIT 1`);
         activeParquetAlias = candidate.alias;
         sampleResult = probe;
@@ -94,6 +102,7 @@ export async function initDuckDB(parquetUrl) {
     const kecamatanCol = findCol(['kecamatan', 'kec']);
     const desaCol = findCol(['desa', 'kelurahan', 'kel']);
     const jarakCol = findCol(['jarak', 'jarak_meter', 'distance', 'jarak_m']);
+    const nisnCol = findCol(['nisn', 'nik', 'no_induk_siswa', 'nomor_induk']);
 
     // ID and jalur detection (existing logic expanded)
     if (!globalCache.idColumn) {
@@ -130,6 +139,8 @@ export async function initDuckDB(parquetUrl) {
     else selectClause += `,CAST(NULL AS VARCHAR) as id_peserta`;
     if (globalCache.jalurColumn) selectClause += `,${cleanTextExpr(globalCache.jalurColumn)} as jalur`;
     else selectClause += `,CAST(NULL AS VARCHAR) as jalur`;
+    if (nisnCol) selectClause += `,${cleanTextExpr(nisnCol)} as nisn`;
+    else selectClause += `,CAST(NULL AS VARCHAR) as nisn`;
     
     globalCache.selectClause = selectClause;
 
@@ -155,8 +166,11 @@ export async function syncDeltaData(deltaUrl) {
   const urlWithCacheBuster = `${deltaUrl}?t=${timestamp}`;
   
   try {
-    // 1. Register the new delta file
-    await globalCache.db.registerFileURL(deltaAlias, urlWithCacheBuster, duckdb.DuckDBDataProtocol.HTTP, false);
+    // 1. Fetch + register delta file using buffer (handles GCS redirects)
+    const response = await fetch(urlWithCacheBuster);
+    if (!response.ok) throw new Error(`HTTP ${response.status} fetching delta parquet`);
+    const buffer = await response.arrayBuffer();
+    await globalCache.db.registerFileBuffer(deltaAlias, new Uint8Array(buffer));
     
     // UPSERT LOGIC
     // 2. Delete existing rows that match the IDs in the delta file (if an ID column exists)

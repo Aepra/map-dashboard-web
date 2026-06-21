@@ -4,10 +4,12 @@ const EMPTY_JENJANG = {};
 
 /**
  * Control Panel - Minimalist Filter UI
+ * Fully dynamic: accepts uniqueJenjang prop from dataset instead of hardcoded SD/SMP/PAUD.
  */
 export const ControlPanel = ({
   checkedJenjang,
   setCheckedJenjang,
+  uniqueJenjang = [],
   vizMode,
   setVizMode,
   selectedSchool,
@@ -28,11 +30,11 @@ export const ControlPanel = ({
       .filter(([, checked]) => checked)
       .map(([jenjang]) => jenjang);
 
-    if (selected.length === 3) return 'Semua';
+    if (selected.length === uniqueJenjang.length && uniqueJenjang.length > 0) return 'Semua';
     if (selected.length === 0) return 'Tidak ada';
     if (selected.length === 1) return selected[0];
     return selected.join(' + ');
-  }, [checkedJenjang]);
+  }, [checkedJenjang, uniqueJenjang.length]);
 
   return (
     <div className="bg-white/95 rounded-lg shadow-lg backdrop-blur-sm w-80 border border-slate-200 overflow-hidden">
@@ -49,7 +51,7 @@ export const ControlPanel = ({
         </div>
       </div>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu — dynamic jenjang list from dataset */}
       <div
         className="overflow-hidden border-b border-slate-200 bg-slate-50 transition-all duration-200 ease-out"
         style={{
@@ -61,7 +63,7 @@ export const ControlPanel = ({
         }}
       >
         <div className="px-4 py-3 space-y-2.5">
-          {['SD', 'SMP', 'PAUD'].map((jenjang) => (
+          {uniqueJenjang.map((jenjang) => (
             <label key={jenjang} className="flex items-center gap-3 cursor-pointer hover:bg-blue-50 p-2 rounded-md transition">
               <input
                 type="checkbox"
@@ -70,9 +72,7 @@ export const ControlPanel = ({
                 className="w-4 h-4 cursor-pointer accent-blue-600 rounded"
               />
               <span className="text-sm font-medium text-slate-700">
-                {jenjang === 'SD' && '🔴 SD'}
-                {jenjang === 'SMP' && '🔵 SMP'}
-                {jenjang === 'PAUD' && '🟡 PAUD'}
+                {jenjang}
               </span>
             </label>
           ))}

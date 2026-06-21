@@ -58,21 +58,20 @@ self.onmessage = function(e) {
     }
     // Full-row uniqueness using JSON.stringify as hash
     const uniqueRows = new Set();
-    let sd = 0, smp = 0, paud = 0;
+    const jenjangCounts = {};
     for (const row of filtered) {
       const key = JSON.stringify(row);
       if (!uniqueRows.has(key)) {
         uniqueRows.add(key);
-        if (row.jenjang && row.jenjang.includes('SD')) sd++;
-        else if (row.jenjang && row.jenjang.includes('SMP')) smp++;
-        else paud++;
+        const j = row.jenjang;
+        if (j) {
+          jenjangCounts[j] = (jenjangCounts[j] || 0) + 1;
+        }
       }
     }
     const stats = {
       total: uniqueRows.size,
-      sd,
-      smp,
-      paud,
+      jenjangCounts,
     };
     self.postMessage({ type: 'STATS_RESULT', payload: stats });
   }

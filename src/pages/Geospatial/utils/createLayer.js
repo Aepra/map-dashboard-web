@@ -129,20 +129,25 @@ const getDistinctSchoolColor = (schoolName, hueOffset) => {
   return hslToRgb(hueBase, satBands[band], lightBands[band]);
 };
 
-const getPaudColor = (schoolName) => {
-  if (!schoolName) return COLORS.others;
-  if (schoolName.trim().toLowerCase() === 'paud negeri mariso') return [175, 82, 222];
-  return getDistinctSchoolColor(schoolName, 18);
+/**
+ * Dynamic jenjang color assignment.
+ * Uses a deterministic hash based on the jenjang value to pick a distinct color.
+ * No hardcoded SD/SMP/PAUD — any new jenjang value will get a consistent color.
+ */
+const getJenjangBaseColor = (jenjang) => {
+  if (!jenjang) return COLORS.others;
+  const hash = hashString(jenjang);
+  const hue = (hash * 137.508) % 360;  // Golden angle for maximal hue separation
+  return hslToRgb(hue, 0.78, 0.48);
 };
 
-const getSmpColor = (schoolName) => {
-  if (!schoolName) return COLORS.smp;
-  return getDistinctSchoolColor(schoolName, 196);
-};
-
-const getSdColor = (schoolName) => {
-  if (!schoolName) return COLORS.sd;
-  return getDistinctSchoolColor(schoolName, 332);
+const getJenjangColor = (jenjang, schoolName) => {
+  if (!jenjang) return COLORS.others;
+  if (!schoolName) return getJenjangBaseColor(jenjang);
+  // Blend jenjang base color with school-specific hue offset for visual variation
+  const schoolHash = hashString(schoolName);
+  const hue = (hashString(jenjang) * 137.508 + schoolHash * 17.3) % 360;
+  return hslToRgb(hue, 0.78, 0.48);
 };
 
 export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent) => {
@@ -204,9 +209,7 @@ export const createStudentLayer = (filteredData, zoom, vizMode, onSelectStudent)
     data: filteredData,
     getPosition: (d) => [d.bujur, d.lintang],
     getFillColor: (d) => {
-      if (d.jenjang.includes('SD')) return getSdColor(d.nama_sekolah_tujuan);
-      if (d.jenjang.includes('SMP')) return getSmpColor(d.nama_sekolah_tujuan);
-      return getPaudColor(d.nama_sekolah_tujuan);
+      return getJenjangColor(d.jenjang, d.nama_sekolah_tujuan);
     },
     getRadius,
     radiusUnits: 'pixels',

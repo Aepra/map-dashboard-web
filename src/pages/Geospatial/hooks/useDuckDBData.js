@@ -5,17 +5,20 @@ import { tableFromIPC } from 'apache-arrow';
 const buildDropdownOptions = (rows = []) => {
   const jenjang = new Set();
   const status = new Set();
+  const statusVerifikasi = new Set();
   const jalur = new Set();
 
   for (const row of rows) {
     if (row?.jenjang) jenjang.add(String(row.jenjang).trim());
     if (row?.status_penerimaan || row?.status) status.add(String(row.status_penerimaan || row.status).trim());
+    if (row?.status_verifikasi || row?.verifikasi) statusVerifikasi.add(String(row.status_verifikasi || row.verifikasi).trim());
     if (row?.jalur) jalur.add(String(row.jalur).trim());
   }
 
   return {
     jenjang: [...jenjang].filter(Boolean).sort(),
     status: [...status].filter(Boolean).sort(),
+    statusVerifikasi: [...statusVerifikasi].filter(Boolean).sort(),
     jalur: [...jalur].filter(Boolean).sort(),
   };
 };
@@ -53,8 +56,8 @@ export const useDuckDBData = (viewportBounds, filters, limit = null, parquetUrl,
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState({ total: 0, sd: 0, smp: 0, paud: 0 });
-  const [dropdownOptions, setDropdownOptions] = useState({ jenjang: [], status: [], jalur: [] });
+  const [stats, setStats] = useState({ total: 0, jenjangCounts: {} });
+  const [dropdownOptions, setDropdownOptions] = useState({ jenjang: [], status: [], statusVerifikasi: [], jalur: [] });
   const [initialized, setInitialized] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(Date.now());
 

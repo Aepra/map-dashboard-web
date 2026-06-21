@@ -96,6 +96,24 @@ const SATELLITE_MAP_STYLE = {
 
 const normalizeSearchText = (value) => getDisplayValue(value)?.toLowerCase() || '';
 
+/**
+ * Assign a status color for tooltip display based on keyword heuristics.
+ * No hardcoded status names — uses keyword detection for visual grouping.
+ */
+const getTooltipStatusColor = (status) => {
+  const upper = (status || '').toUpperCase();
+  if (upper.includes('LULUS') || upper.includes('TERIMA') || upper.includes('VALID') || upper.includes('TERVERIFIKASI')) {
+    return '#047857';
+  }
+  if (upper.includes('TIDAK') || upper.includes('INVALID') || upper.includes('DITOLAK') || upper.includes('REJECTED')) {
+    return '#B91C1C';
+  }
+  if (upper.includes('CADANGAN') || upper.includes('MENUNGGU') || upper.includes('PENDING') || upper.includes('BELUM')) {
+    return '#B45309';
+  }
+  return '#374151';
+};
+
 const GeospatialMap = ({ year, onRestart = () => {} }) => {
   const MAX_RENDERED_STUDENTS_NEAR = 12000;
   const MAX_RENDERED_STUDENTS_MID = 8000;
@@ -229,6 +247,7 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
   const uniqueJenjang = dropdownOptions.jenjang;
   const uniqueStatus = dropdownOptions.status;
   const uniqueJalur = dropdownOptions.jalur;
+  const uniqueStatusVerifikasi = dropdownOptions.statusVerifikasi;
 
   // Build filter object from dropdown selections (memoized)
   const filters = useMemo(() => ({
@@ -325,10 +344,6 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
     ? schoolData.filter((school) => school.nama === activeSchoolName)
     : schoolData;
 
-  // Calculate metrics for filter labels (use memoized empty filters to keep stable reference)
-  const metricsFilterStub = useMemo(() => ({ checkedJenjang: {}, checkedStatus: {}, checkedJalur: {} }), []);
-  const metrics = useFilterMetrics(data, metricsFilterStub);
-
   // Get tooltip content for hovered object (memoized to prevent re-renders)
   const getTooltipContent = useCallback((hovered) => {
     if (!hovered) return null;
@@ -351,7 +366,7 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
             <div style="font-weight:700; margin-bottom:6px;">${schoolName}</div>
             <div style="font-size:12px; color:#374151">Jenjang: <strong style="color:#111827">${jenjang}</strong></div>
             <div style="font-size:12px; color:#374151">Jalur: <strong style="color:#111827">${jalur}</strong></div>
-            <div style="font-size:12px; color:#374151">Status: <strong style="color:${status === 'Diterima' ? '#047857' : status === 'Cadangan' ? '#B45309' : '#B91C1C'}">${status}</strong></div>
+            <div style="font-size:12px; color:#374151">Status: <strong style="color:${getTooltipStatusColor(status)}">${status}</strong></div>
             ${coords ? `<div style="margin-top:6px;font-size:11px;color:#6b7280">Koordinat: ${coords}</div>` : ''}
           </div>
         `,
@@ -361,9 +376,10 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
     // If hovering over school layer — show counts and quick breakdown
     if (hovered.layer?.id === 'sekolah-layer') {
       const total = object.totalSiswa || 0;
-      const sd = object.sdCount || 0;
-      const smp = object.smpCount || 0;
-      const paud = object.paudCount || 0;
+      const jCounts = object.jenjangCounts || {};
+      const jenjangSummary = Object.entries(jCounts)
+        .map(([j, c]) => `${j} ${c}`)
+        .join(', ') || 'tidak ada data';
       return {
         x: hovered.x,
         y: hovered.y,
@@ -371,7 +387,7 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
           <div style="padding:10px; font-size:12px; color:#0f172a; max-width:320px; border-radius:8px; background:rgba(255,255,255,0.98); box-shadow:0 6px 28px rgba(2,6,23,0.12);">
             <div style="font-weight:700; margin-bottom:6px;">${object.nama || 'Sekolah'}</div>
             <div style="font-size:13px; color:#374151">Total Siswa: <strong style="color:#0b5cff">${total.toLocaleString('id-ID')}</strong></div>
-            <div style="font-size:12px; color:#4b5563; margin-top:6px">Rincian: SD ${sd}, SMP ${smp}, PAUD ${paud}</div>
+            <div style="font-size:12px; color:#4b5563; margin-top:6px">Rincian: ${jenjangSummary}</div>
             ${object.bujur && object.lintang ? `<div style="margin-top:6px;font-size:11px;color:#6b7280">Koordinat: ${Number(object.lintang).toFixed(4)}, ${Number(object.bujur).toFixed(4)}</div>` : ''}
           </div>
         `,
@@ -589,7 +605,7 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
           onMouseEnter={() => setHoveredHeaderItem('blue')}
           onMouseLeave={() => setHoveredHeaderItem(null)}
         >
-          <label style={responsiveLabelStyle}>Jalur ({metrics.jalurCounts?.[selectedJalur] || 0})</label>
+          <label style={responsiveLabelStyle}>Jalur</label>
           <select
             value={selectedJalur}
             onChange={e => setSelectedJalur(e.target.value)}
@@ -625,7 +641,7 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
           onMouseEnter={() => setHoveredHeaderItem('amber')}
           onMouseLeave={() => setHoveredHeaderItem(null)}
         >
-          <label style={responsiveLabelStyle}>Status ({metrics.statusCounts?.[selectedStatus] || 0})</label>
+          <label style={responsiveLabelStyle}>Status</label>
           <select
             value={selectedStatus}
             onChange={e => setSelectedStatus(e.target.value)}
@@ -847,6 +863,9 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
             selectedStudent={selectedStudent}
             selectedSchool={selectedSchool}
             onClose={() => setSelectedStudent(null)}
+            allStatusPenerimaan={uniqueStatus}
+            allStatusVerifikasi={uniqueStatusVerifikasi}
+            allJenjang={uniqueJenjang}
           />
         </div>
       )}
@@ -857,6 +876,9 @@ const GeospatialMap = ({ year, onRestart = () => {} }) => {
             selectedSchool={activeSchoolName}
             schoolData={visibleSchoolData.length > 0 ? visibleSchoolData : schoolData}
             onClose={() => setSelectedSchool(null)}
+            allStatusPenerimaan={uniqueStatus}
+            allStatusVerifikasi={uniqueStatusVerifikasi}
+            allJenjang={uniqueJenjang}
           />
         </div>
       )}

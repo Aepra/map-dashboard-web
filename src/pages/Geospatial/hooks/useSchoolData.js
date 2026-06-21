@@ -2,30 +2,18 @@ import { useMemo } from 'react';
 
 /**
  * Aggregate school data from student records for map layers and search panels.
+ * Fully dynamic: all status values and jenjang are read directly from dataset.
+ * No hardcoded values for SD/SMP/PAUD or status categories.
+ *
+ * UNIT DATA: "pendaftaran" — uniqueKey = pendaftaran_id
+ * 1 baris data = 1 pendaftaran unik.
+ * 1 siswa (nisn) boleh muncul >1x jika mendaftar lebih dari sekali.
+ * Semua agregasi menggunakan Set(pendaftaran_id) untuk konsistensi mutlak.
+ * TIDAK ADA per-row increment ((count || 0) + 1) — semua menggunakan Set.size.
  */
 export const useSchoolData = (data) => {
   return useMemo(() => {
     if (!data || data.length === 0) return [];
-
-    // List semua kolom untuk composite key (COUNT DISTINCT)
-    const distinctColumns = [
-      'waktu_pendaftaran', 'jenjang', 'jalur', 'nik', 'nisn', 'tanggal_lahir', 'kategori_usia',
-      'kebutuhan_khusus', 'pendaftaran_id', 'jenis_kelamin', 'kecamatan', 'kelurahan', 'lintang', 
-      'bujur', 'koordinat_peserta', 'nama_sekolah_asal', 'nama_sekolah_tujuan', 'kuota', 
-      'kecamatan_sekolah', 'desa_kelurahan_sekolah', 'lintang_sekolah', 'bujur_sekolah', 
-      'koordinat_sekolah', 'jarak_meter', 'status_verifikasi', 'waktu_verifikasi', 'durasi_proses', 
-      'kategori_durasi_proses', 'jenis_pilihan', 'skor', 'status_penerimaan', 'uk_baju', 'uk_celana'
-    ];
-
-    // Generate composite key dari student dengan semua kolom
-    const getCompositeKey = (student) => {
-      return distinctColumns
-        .map(col => {
-          const value = student[col];
-          return value === null || value === undefined ? 'NULL' : String(value).trim();
-        })
-        .join('|');
-    };
 
     const schoolMap = new Map();
 
@@ -58,24 +46,19 @@ export const useSchoolData = (data) => {
       return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
     };
 
-    // Debug: collect unique status values
-    const statusValues = new Set();
-
     data.forEach((student) => {
       const schoolName = student.nama_sekolah_tujuan || 'N/A';
-      const jenjang = String(student.jenjang || '');
+      const jenjang = String(student.jenjang || '').trim();
       const participantLat = normalizeNumber(student.lintang);
       const participantLon = normalizeNumber(student.bujur);
       const schoolLat = normalizeNumber(student.lintang_sekolah);
       const schoolLon = normalizeNumber(student.bujur_sekolah);
-      const status = String(student.status_penerimaan || '').trim();
+      const statusPenerimaan = String(student.status_penerimaan || '').trim();
+      const statusVerifikasi = String(student.status_verifikasi || '').trim();
       const jalur = String(student.jalur || '').trim();
-      const verifikasi = String(student.status_verifikasi || '').trim();
-      
-      // Debug: log unique status values
-      if (status && status !== '') {
-        statusValues.add(status);
-      }
+
+      // Unique key: pendaftaran_id (primary key setiap baris = 1 pendaftaran)
+      const uniqueKey = String(student.pendaftaran_id || student.id_peserta || student.id || '').trim();
 
       if (!schoolMap.has(schoolName)) {
         schoolMap.set(schoolName, {
@@ -84,114 +67,106 @@ export const useSchoolData = (data) => {
           schoolLonList: [],
           participantLatList: [],
           participantLonList: [],
-          totalSiswa: new Set(),
-          sdCount: new Set(),
-          smpCount: new Set(),
-          paudCount: new Set(),
-          totalLulus: new Set(),
-          totalTidakLulus: new Set(),
-          totalTerverifikasi: new Set(),
-          totalTidakTerverifikasi: new Set(),
-          totalBelumDiproses: new Set(),
-          totalDitolak: new Set(),
+          // Semua agregasi menggunakan Set(uniqueKey) — bukan increment mentah
+          setTotal: new Set(),
+          statusPenerimaanSets: {},
+          statusVerifikasiSets: {},
+          jenjangSets: {},
           jalurMap: new Map(),
         });
       }
 
       const school = schoolMap.get(schoolName);
-      
-      // Generate composite key untuk COUNT DISTINCT
-      const compositeKey = getCompositeKey(student);
-      
-      school.totalSiswa.add(compositeKey);
-      
-      // Track lulus vs tidak lulus
-      const isLulus = status.toUpperCase() === 'LULUS' || 
-                      status.toLowerCase() === 'lulus';
-      
-      const isTidakLulus = status && status !== '' && !isLulus;
-      
-      // Track verifikasi status dari 4 kategori: Terverifikasi, Tidak terverifikasi, Belum diproses, Ditolak
-      const verifikasiUpper = verifikasi.toUpperCase();
-      const isTerverifikasi = verifikasiUpper === 'TERVERIFIKASI';
-      const isTidakTerverifikasi = verifikasiUpper === 'TIDAK TERVERIFIKASI';
-      const isBelumDiproses = verifikasiUpper === 'BELUM DIPROSES';
-      const isDitolak = verifikasiUpper === 'DITOLAK';
-      
-      if (compositeKey) {
-        if (isLulus) {
-          school.totalLulus.add(compositeKey);
-        } else if (isTidakLulus) {
-          school.totalTidakLulus.add(compositeKey);
+
+      if (uniqueKey) {
+        school.setTotal.add(uniqueKey);
+
+        // Dynamic jenjang — Set-based deduplikasi
+        if (jenjang) {
+          if (!school.jenjangSets[jenjang]) {
+            school.jenjangSets[jenjang] = new Set();
+          }
+          school.jenjangSets[jenjang].add(uniqueKey);
         }
-        
-        // Track verifikasi - count all verifikasi values separately
-        if (isTerverifikasi) {
-          school.totalTerverifikasi.add(compositeKey);
-        } else if (isTidakTerverifikasi) {
-          school.totalTidakTerverifikasi.add(compositeKey);
-        } else if (isBelumDiproses) {
-          school.totalBelumDiproses.add(compositeKey);
-        } else if (isDitolak) {
-          school.totalDitolak.add(compositeKey);
+
+        // Dynamic status penerimaan — Set-based deduplikasi
+        if (statusPenerimaan) {
+          if (!school.statusPenerimaanSets[statusPenerimaan]) {
+            school.statusPenerimaanSets[statusPenerimaan] = new Set();
+          }
+          school.statusPenerimaanSets[statusPenerimaan].add(uniqueKey);
         }
-        
-        // Track per jalur
+
+        // Dynamic status verifikasi — Set-based deduplikasi
+        if (statusVerifikasi) {
+          if (!school.statusVerifikasiSets[statusVerifikasi]) {
+            school.statusVerifikasiSets[statusVerifikasi] = new Set();
+          }
+          school.statusVerifikasiSets[statusVerifikasi].add(uniqueKey);
+        }
+
+        // Track per jalur — Set-based deduplikasi
         if (jalur && jalur !== '') {
           if (!school.jalurMap.has(jalur)) {
-            school.jalurMap.set(jalur, { lulus: new Set(), tidakLulus: new Set() });
+            school.jalurMap.set(jalur, {});
           }
           const jalurData = school.jalurMap.get(jalur);
-          
-          if (isLulus) {
-            jalurData.lulus.add(compositeKey);
-          } else if (isTidakLulus) {
-            jalurData.tidakLulus.add(compositeKey);
+
+          if (statusPenerimaan) {
+            if (!jalurData[statusPenerimaan]) {
+              jalurData[statusPenerimaan] = new Set();
+            }
+            jalurData[statusPenerimaan].add(uniqueKey);
           }
         }
       }
-      
+
       if (schoolLat !== null) school.schoolLatList.push(schoolLat);
       if (schoolLon !== null) school.schoolLonList.push(schoolLon);
       if (participantLat !== null) school.participantLatList.push(participantLat);
       if (participantLon !== null) school.participantLonList.push(participantLon);
-
-      // Count distinct per jenjang
-      if (jenjang.includes('SD') && compositeKey) school.sdCount.add(compositeKey);
-      else if (jenjang.includes('SMP') && compositeKey) school.smpCount.add(compositeKey);
-      else if (compositeKey) school.paudCount.add(compositeKey);
     });
 
-    // Debug log
-    console.log('Status values found in data:', Array.from(statusValues));
-
     const schools = Array.from(schoolMap.values());
-    schools.sort((a, b) => b.totalSiswa.size - a.totalSiswa.size);
+    schools.sort((a, b) => b.setTotal.size - a.setTotal.size);
 
     return schools.map((school) => {
-      // Convert jalur map to array format
-      const jalurBreakdown = Array.from(school.jalurMap.entries()).map(([jalurName, counts]) => ({
-        jalur: jalurName,
-        lulus: counts.lulus.size,
-        tidakLulus: counts.tidakLulus.size,
-        total: counts.lulus.size + counts.tidakLulus.size,
-      })).sort((a, b) => b.total - a.total);
-      
+      // Convert jalur map to array format — fully dynamic, no hardcoded keys
+      const jalurBreakdown = Array.from(school.jalurMap.entries()).map(([jalurName, statusMap]) => {
+        const statusCounts = {};
+        let total = 0;
+        for (const [statusValue, idSet] of Object.entries(statusMap)) {
+          statusCounts[statusValue] = idSet.size;
+          total += idSet.size;
+        }
+        return { jalur: jalurName, statusCounts, total };
+      }).sort((a, b) => b.total - a.total);
+
+      // Convert semua Set ke .size
+      const statusPenerimaanCounts = {};
+      for (const [key, setVal] of Object.entries(school.statusPenerimaanSets)) {
+        statusPenerimaanCounts[key] = setVal.size;
+      }
+
+      const statusVerifikasiCounts = {};
+      for (const [key, setVal] of Object.entries(school.statusVerifikasiSets)) {
+        statusVerifikasiCounts[key] = setVal.size;
+      }
+
+      const jenjangCounts = {};
+      for (const [key, setVal] of Object.entries(school.jenjangSets)) {
+        jenjangCounts[key] = setVal.size;
+      }
+
       return {
         nama: school.nama,
         lintang: pickBestCoordinate(school.schoolLatList, school.participantLatList),
         bujur: pickBestCoordinate(school.schoolLonList, school.participantLonList),
-        totalSiswa: school.totalSiswa.size,
-        totalLulus: school.totalLulus.size,
-        totalTidakLulus: school.totalTidakLulus.size,
-        totalTerverifikasi: school.totalTerverifikasi.size,
-        totalTidakTerverifikasi: school.totalTidakTerverifikasi.size,
-        totalBelumDiproses: school.totalBelumDiproses.size,
-        totalDitolak: school.totalDitolak.size,
-        sdCount: school.sdCount.size,
-        smpCount: school.smpCount.size,
-        paudCount: school.paudCount.size,
-        jalurBreakdown: jalurBreakdown,
+        totalSiswa: school.setTotal.size,
+        statusPenerimaanCounts,
+        statusVerifikasiCounts,
+        jenjangCounts,
+        jalurBreakdown,
       };
     });
   }, [data]);
